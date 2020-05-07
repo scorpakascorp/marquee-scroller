@@ -52,6 +52,7 @@ SOFTWARE.
 #include "OctoPrintClient.h"
 #include "BitcoinApiClient.h"
 #include "PiHoleClient.h"
+#include "marquee-scroller.h"
 
 //******************************
 // Start Settings
