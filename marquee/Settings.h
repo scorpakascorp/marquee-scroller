@@ -47,6 +47,9 @@ SOFTWARE.
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h> // --> https://github.com/adafruit/Adafruit-GFX-Library
+#include "SansSerif_plain_8.h"
+#include "DejaVu_Sans_Mono_8.h"
+#include <fonts/TomThumb.h>
 #include <Max72xxPanel.h> // --> https://github.com/markruys/arduino-Max72xxPanel
 #include <pgmspace.h>
 
@@ -139,6 +142,7 @@ int getMinutesFromLastRefresh();
 String getPressureSymbol();
 String getSpeedSymbol();
 String getTempSymbol();
+String getTempSymbolWeb();
 String getTimeTillUpdate();
 void getWeatherData();
 int8_t getWifiQuality();

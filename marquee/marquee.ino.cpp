@@ -57,6 +57,7 @@ int width = 5 + spacer; // The font width is 5 pixels + spacer
 Max72xxPanel matrix = Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 String Wide_Clock_Style = "1";  //1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
 float UtcOffset;  //time zone offsets that correspond with the CityID above (offset from GMT)
+const String scrollSpacer = " --- ";
 
 // Time
 TimeDB TimeDB("");
@@ -225,6 +226,8 @@ void setup() {
   Serial.println("Number of LED Displays: " + String(numberOfHorizontalDisplays));
   // initialize dispaly
   matrix.setIntensity(0); // Use a value between 0 and 15 for brightness
+  //matrix.setFont(&TomThumb);
+  //matrix.cp437(true);
 
   int maxPos = numberOfHorizontalDisplays * numberOfVerticalDisplays;
   for (int i = 0; i < maxPos; i++) {
@@ -382,63 +385,77 @@ void loop() {
       String description = weatherClient.getDescription(0);
       description.toUpperCase();
       String msg;
-      msg += " ";
+      msg += scrollSpacer;
 
       if (SHOW_DATE) {
         msg += TimeDB.getDayName() + ", ";
-        msg += TimeDB.getMonthName() + " " + day() + "  ";
+        msg += TimeDB.getMonthName() + " " + day();
+        msg += scrollSpacer;
       }
       if (SHOW_CITY) {
-        msg += weatherClient.getCity(0) + "  ";
+        msg += weatherClient.getCity(0);
+        msg += scrollSpacer;
       }
-      msg += "Temp:" + temperature + getTempSymbol() + "  ";
-      
+      msg += "Temp: " + temperature + getTempSymbol();
+      msg += scrollSpacer;
+
       if (SHOW_FEELSLIKE) {
         String feels_like = weatherClient.getFeelsLikeRounded(0);
-        msg += "Feels like:" + feels_like + getTempSymbol() + "  ";
+        msg += "Feels like: " + feels_like + getTempSymbol();
+        msg += scrollSpacer;
       } 
         
 
       //show high/low temperature
       if (SHOW_HIGHLOW) {
-        msg += "Hi:" + weatherClient.getHigh(0) + getTempSymbol() + " / Lo:" + weatherClient.getLow(0) + " " + getTempSymbol() + "  ";
+        msg += "Hi:" + weatherClient.getHigh(0) + getTempSymbol() + " / Lo:" + weatherClient.getLow(0) + " " + getTempSymbol();
+        msg += scrollSpacer;
       }
       
       if (SHOW_CONDITION) {
-        msg += description + "  ";
+        msg += description + ". ";
       }
       if (SHOW_HUMIDITY) {
         msg += "Humid:" + weatherClient.getHumidityRounded(0) + "%  ";
       }
       if (SHOW_WIND) {
-        msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " + weatherClient.getWindRounded(0) + " " + getSpeedSymbol() + "  ";
+        msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " + weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
+        msg += scrollSpacer;
       }
       //line to show barometric pressure
       if (SHOW_PRESSURE) {
-        msg += "Pressure:" + weatherClient.getPressure(0) + getPressureSymbol() + "  ";
+        msg += "Pressure:" + weatherClient.getPressure(0) + getPressureSymbol();
+        msg += scrollSpacer;
       }
-     
-      msg += marqueeMessage + " ";
+
+      if (!marqueeMessage.isEmpty()) {
+        msg += marqueeMessage;
+        msg += scrollSpacer;
+      }
       
       if (NEWS_ENABLED) {
-        msg += "  " + NEWS_SOURCE + ": " + newsClient.getTitle(newsIndex) + "  ";
+        msg += NEWS_SOURCE + ": " + newsClient.getTitle(newsIndex);
+        msg += scrollSpacer;
         newsIndex += 1;
         if (newsIndex > 9) {
           newsIndex = 0;
         }
       }
       if (OCTOPRINT_ENABLED && printerClient.isPrinting()) {
-        msg += "  " + printerClient.getFileName() + " ";
-        msg += "(" + printerClient.getProgressCompletion() + "%)  ";
+        msg += printerClient.getFileName() + " ";
+        msg += "(" + printerClient.getProgressCompletion() + "%)";
+        msg += scrollSpacer;
       }
       if (BitcoinCurrencyCode != "NONE" && BitcoinCurrencyCode != "") {
-        msg += "  Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode() + " ";
+        msg += "Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode();
+        msg += scrollSpacer;;
       }
       if (USE_PIHOLE) {
         piholeClient.getPiHoleData(PiHoleServer, PiHolePort);
         piholeClient.getGraphData(PiHoleServer, PiHolePort);
         if (piholeClient.getPiHoleStatus() != "") {
-          msg += "    Pi-hole (" + piholeClient.getPiHoleStatus() + "): " + piholeClient.getAdsPercentageToday() + "% "; 
+          msg += "Pi-hole (" + piholeClient.getPiHoleStatus() + "): " + piholeClient.getAdsPercentageToday() + "%";
+          msg += scrollSpacer; 
         }
       }
 
@@ -454,8 +471,8 @@ void loop() {
     if (Wide_Clock_Style == "1") {
       // On Wide Display -- show the current temperature as well
       String currentTemp = weatherClient.getTempRounded(0);
-      String timeSpacer = "  ";
-      if (currentTemp.length() >= 3) timeSpacer = " ";
+      String timeSpacer = "";
+      if (currentTemp.length() <= 2) timeSpacer = " ";
       currentTime += timeSpacer + currentTemp + getTempSymbol();
     }
     if (Wide_Clock_Style == "2") {
@@ -1137,9 +1154,9 @@ void displayWeatherData() {
     html += "</div>";
     html += "<div class='w3-cell w3-container' style='width:100%'><p>";
     html += weatherClient.getCondition(0) + " (" + weatherClient.getDescription(0) + ")<br>";
-    html += "Temperature: " + temperature + " " + getTempSymbol() + "<br>";
-    html += "Feels like: " + feels_like + " " + getTempSymbol() + "<br>";
-    html += weatherClient.getHigh(0) + "/" + weatherClient.getLow(0) + " " + getTempSymbol() + "<br>";
+    html += "Temperature: " + temperature + " " + getTempSymbolWeb() + "<br>";
+    html += "Feels like: " + feels_like + " " + getTempSymbolWeb() + "<br>";
+    html += weatherClient.getHigh(0) + "/" + weatherClient.getLow(0) + " " + getTempSymbolWeb() + "<br>";
     html += time + "<br>";
     html += "<a href='https://www.google.com/maps/@" + weatherClient.getLat(0) + "," + weatherClient.getLon(0) + ",10000m/data=!3m1!1e3' target='_BLANK'><i class='fas fa-map-marker' style='color:red'></i> Map It!</a><br>";
     html += "</p></div></div><hr>";
@@ -1237,11 +1254,12 @@ void flashLED(int number, int delayTime) {
 }
 
 String getTempSymbol() {
-  String rtnValue = "F";
-  if (IS_METRIC) {
-    rtnValue = "C";
-  }
-  return rtnValue;
+  String degSymbol = String((char)247);
+  return (IS_METRIC ? degSymbol+"C" : degSymbol+"F");
+}
+
+String getTempSymbolWeb() {
+  return (IS_METRIC ? "°C" : "°F");
 }
 
 String getSpeedSymbol() {
