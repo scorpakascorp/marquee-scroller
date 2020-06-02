@@ -34,35 +34,18 @@ SOFTWARE.
  * erase the file system on the Wemos or use the “Reset Settings” option in 
  * the Web Interface.
  ******************************************************************************/
- 
-
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
-#include <WiFiManager.h> // --> https://github.com/tzapu/WiFiManager
-#include <ESP8266mDNS.h>
-#include <ArduinoOTA.h>
-#include <LittleFS.h>
-#include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h> // --> https://github.com/adafruit/Adafruit-GFX-Library
-#include "SansSerif_plain_8.h"
-#include "DejaVu_Sans_Mono_8.h"
-#include <fonts/TomThumb.h>
-#include <Max72xxPanel.h> // --> https://github.com/markruys/arduino-Max72xxPanel
-#include <pgmspace.h>
-
-#include "OpenWeatherMapClient.h"
-#include "TimeDB.h"
-#include "NewsApiClient.h" 
-#include "OctoPrintClient.h"
-#include "BitcoinApiClient.h"
-#include "PiHoleClient.h"
+#ifndef SETTINGS_H
+#define SETTINGS_H
+#pragma once
 
 //******************************
 // Start Settings
 //******************************
+#define VERSION "2.16"
+
+#define HOSTNAME "CLOCK-"
+#define CONFIG "/conf.txt"
+#define BUZZER_PIN  D2
 
 String TIMEDBKEY = ""; // Your API Key from https://timezonedb.com/register
 String APIKEY = ""; // Your API Key from http://openweathermap.org/
@@ -125,55 +108,7 @@ int PiHolePort = 80;          // Port of your Pi-hole address (default 80)
 boolean ENABLE_OTA = true;    // this will allow you to load firmware to the device over WiFi (see OTA for ESP8266)
 String OTA_Password = "";     // Set an OTA password here -- leave blank if you don't want to be prompted for password
 
-//******************************
-// End Settings
-//******************************
-boolean athentication();
-void centerPrint(String msg, boolean extraStuff = false);
-void checkDisplay();
-String decodeHtmlString(String msg);
-void displayMessage(String message);
-void displayWeatherData();
-void drawPiholeGraph();
-void enableDisplay(boolean enable);
-void flashLED(int number, int delayTime);
-int getMinutesFromLastDisplay();
-int getMinutesFromLastRefresh();
-String getPressureSymbol();
-String getSpeedSymbol();
-String getTempSymbol();
-String getTempSymbolWeb();
-String getTimeTillUpdate();
-void getWeatherData();
-int8_t getWifiQuality();
-void handleBitcoinConfigure();
-void handleConfigure();
-void handleDisplay();
-void handleForgetWifi();
-void handleLocations();
-void handleNewsConfigure();
-void handleOctoprintConfigure();
-void handlePiholeConfigure();
-void handlePull();
-void handleSaveBitcoin();
-void handleSaveNews();
-void handleSaveOctoprint();
-void handleSavePihole();
-void handleSaveWideClock();
-void handleSystemReset();
-void handleSystemReset();
-void handleWideClockConfigure();
-String hourMinutes(boolean isRefresh);
-void readCityIds();
-void redirectHome();
-void scrollMessage(String msg);
-String secondsIndicator(boolean isRefresh);
-void sendFooter();
-void sendHeader();
-String writeConfig();
-
-
-
+#endif
 
 
 
