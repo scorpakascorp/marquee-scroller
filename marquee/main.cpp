@@ -37,7 +37,7 @@ void setup() {
 
   readCityIds();
 
-  Serial.println("Number of LED Displays: " + String(numberOfHorizontalDisplays));
+  Serial.println("*setup(): Number of LED Displays: " + String(numberOfHorizontalDisplays));
   // initialize dispaly
   matrix.setIntensity(0); // Use a value between 0 and 15 for brightness
   //matrix.setFont(&TomThumb);
@@ -49,7 +49,7 @@ void setup() {
     matrix.setPosition(i, maxPos - i - 1, 0);
   }
 
-  Serial.println("matrix created");
+  Serial.println("*setup(): Matrix created");
   matrix.fillScreen(LOW); // show black
   centerPrint("hello");
 
@@ -94,22 +94,22 @@ void setup() {
   }
 
   // print the received signal strength:
-  Serial.print("Signal Strength (RSSI): ");
+  Serial.print("*setup(): Signal Strength (RSSI): ");
   Serial.print(getWifiQuality());
   Serial.println("%");
 
   if (ENABLE_OTA) {
     ArduinoOTA.onStart([]() {
-      Serial.println("Start");
+      Serial.println("*setup() OTA: Start");
     });
     ArduinoOTA.onEnd([]() {
       Serial.println("\nEnd");
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+      Serial.printf("*setup() OTA: Progress: %u%%\r", (progress / (total / 100)));
     });
     ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
+      Serial.printf("*setup() OTA: Error[%u]: ", error);
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
       else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
       else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
@@ -145,13 +145,13 @@ void setup() {
     serverUpdater.setup(&server, "/update", www_username, www_password);
     // Start the server
     server.begin();
-    Serial.println("Server started");
+    Serial.println("*setup(): Server started");
     // Print the IP address
     String webAddress = "http://" + WiFi.localIP().toString() + ":" + String(WEBSERVER_PORT) + "/";
-    Serial.println("Use this URL : " + webAddress);
+    Serial.println("*setup(): Use this URL : " + webAddress);
     scrollMessage(" v" + String(VERSION) + "  IP: " + WiFi.localIP().toString() + "  ");
   } else {
-    Serial.println("Web Interface is Disabled");
+    Serial.println("*setup(): Web Interface is Disabled");
     scrollMessage("Web Interface is Disabled");
   }
 
@@ -161,7 +161,7 @@ void setup() {
 void loop() {
   //Get some Weather Data to serve
   if ((getMinutesFromLastRefresh() >= minutesBetweenDataRefresh) || lastEpoch == 0) {
-    getWeatherData();
+    getUpdatedData();
   }
   checkDisplay(); // this will see if we need to turn it on or off for night mode.
 
@@ -227,7 +227,7 @@ void loop() {
         msg += description + ". ";
       }
       if (SHOW_HUMIDITY) {
-        msg += "Humid:" + weatherClient.getHumidityRounded(0) + "%  ";
+        msg += "Humid: " + weatherClient.getHumidityRounded(0) + "%  ";
       }
       if (SHOW_WIND) {
         msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " + weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
@@ -329,7 +329,7 @@ boolean athentication() {
 }
 
 void handlePull() {
-  getWeatherData(); // this will force a data pull for new weather
+  getUpdatedData(); // this will force a data pull for new weather
   displayWeatherData();
 }
 
@@ -436,7 +436,7 @@ void handleLocations() {
   weatherClient.setMetric(IS_METRIC);
   matrix.fillScreen(LOW); // show black
   writeConfig();
-  getWeatherData(); // this will force a data pull for new weather
+  getUpdatedData(); // this will force a data pull for new weather
   redirectHome();
 }
 
@@ -771,11 +771,10 @@ void handleDisplay() {
 }
 
 //***********************************************************************
-void getWeatherData() //client function to send/receive GET request data.
+void getUpdatedData() //client function to send/receive GET request data.
 {
   digitalWrite(externalLight, LOW);
   matrix.fillScreen(LOW); // show black
-  Serial.println();
 
   if (displayOn) {
     // only pull the weather data if display is on
@@ -795,24 +794,24 @@ void getWeatherData() //client function to send/receive GET request data.
     }
   }
 
-  Serial.println("Updating Time...");
+  Serial.println("*GetUpdatedData(): Updating Time...");
   //Update the Time
   matrix.drawPixel(0, 4, HIGH);
   matrix.drawPixel(0, 3, HIGH);
   matrix.drawPixel(0, 2, HIGH);
-  Serial.println("matrix Width:" + matrix.width());
+  Serial.println("*GetUpdatedData(): Matrix Width:" + matrix.width());
   matrix.write();
   TimeDB.updateConfig(TIMEDBKEY, weatherClient.getLat(0), weatherClient.getLon(0));
   time_t currentTime = TimeDB.getTime();
   if(currentTime > 5000 || firstEpoch == 0) {
     setTime(currentTime);
   } else {
-    Serial.println("Time update unsuccessful!");
+    Serial.println("*GetUpdatedData(): Time update unsuccessful!");
   }
   lastEpoch = now();
   if (firstEpoch == 0) {
     firstEpoch = now();
-    Serial.println("firstEpoch is: " + String(firstEpoch));
+    Serial.println("*GetUpdatedData(): firstEpoch is: " + String(firstEpoch));
   }
 
   if (NEWS_ENABLED && displayOn) {
@@ -820,7 +819,7 @@ void getWeatherData() //client function to send/receive GET request data.
     matrix.drawPixel(0, 1, HIGH);
     matrix.drawPixel(0, 0, HIGH);
     matrix.write();
-    Serial.println("Getting News Data for " + NEWS_SOURCE);
+    Serial.println("*GetUpdatedData(): Getting News Data for " + NEWS_SOURCE);
     newsClient.updateNews();
   }
 
@@ -828,7 +827,7 @@ void getWeatherData() //client function to send/receive GET request data.
     bitcoinClient.updateBitcoinData(BitcoinCurrencyCode);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   }
 
-  Serial.println("Version: " + String(VERSION));
+  Serial.println("*GetUpdatedData(): Version: " + String(VERSION));
   Serial.println();
   digitalWrite(externalLight, HIGH);
 }
@@ -956,14 +955,14 @@ void displayWeatherData() {
       html += "<p>Weather Error: <strong>" + weatherClient.getError() + "</strong></p>";
     }
   } else {
-    html += "<div class='w3-cell-row' style='width:100%'><h2>" + weatherClient.getCity(0) + ", " + weatherClient.getCountry(0) + "</h2></div><div class='w3-cell-row'>";
-    html += "<div class='w3-cell w3-left w3-medium' style='width:120px'>";
+    html += "<div class='w3-cell-row' style='width:100%; text-align:center'><h2>" + weatherClient.getCity(0) + ", " + weatherClient.getCountry(0) + "</h2></div><div class='w3-cell-row'>";
+    html += "<div class='w3-cell w3-container' style='width:50%; text-align:right'>";
     html += "<img src='http://openweathermap.org/img/w/" + weatherClient.getIcon(0) + ".png' alt='" + weatherClient.getDescription(0) + "'><br>";
     html += weatherClient.getHumidity(0) + "% Humidity<br>";
     html += weatherClient.getDirectionText(0) + " / " + weatherClient.getWind(0) + " <span class='w3-tiny'>" + getSpeedSymbol() + "</span> Wind<br>";
     html += weatherClient.getPressure(0) + " Pressure<br>";
     html += "</div>";
-    html += "<div class='w3-cell w3-container' style='width:100%'><p>";
+    html += "<div class='w3-cell w3-container' style='width:50%'><p>";
     html += weatherClient.getCondition(0) + " (" + weatherClient.getDescription(0) + ")<br>";
     html += "Temperature: " + temperature + " " + getTempSymbolWeb() + "<br>";
     html += "Feels like: " + feels_like + " " + getTempSymbolWeb() + "<br>";
@@ -1171,6 +1170,10 @@ void checkDisplay() {
     flashLED(2, 500);
     enableDisplay(false);
   }
+}
+
+String writeConfigJson() {
+
 }
 
 String writeConfig() {
@@ -1534,7 +1537,7 @@ void centerPrint(String msg, boolean extraStuff) {
   
   matrix.setCursor(x, 0);
   matrix.print(msg);
-  Serial.println("Debug - scrolled message: " + msg);
+  //Serial.println("Debug - scrolled message: " + msg);
   matrix.write();
 }
 

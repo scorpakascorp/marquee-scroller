@@ -38,8 +38,8 @@ void OpenWeatherMapClient::updateWeather() {
   WiFiClient weatherClient;
   String apiGetData = "GET /data/2.5/group?id=" + myCityIDs + "&units=" + units + "&cnt=1&APPID=" + myApiKey + " HTTP/1.1";
 
-  Serial.println("Getting Weather Data");
-  Serial.println(apiGetData);
+  Serial.println("*OWMC: Getting Weather Data");
+  Serial.println("*OWMC: request: " + apiGetData);
   weathers[0].cached = false;
   weathers[0].error = "";
   if (weatherClient.connect(servername, 80)) {  //starts client connection, checks for connection
@@ -50,7 +50,7 @@ void OpenWeatherMapClient::updateWeather() {
     weatherClient.println();
   } 
   else {
-    Serial.println("connection for weather data failed"); //error message if no client connect
+    Serial.println("*OWMC: Connection for weather data failed"); //error message if no client connect
     Serial.println();
     weathers[0].error = "Connection for weather data failed";
     return;
@@ -58,14 +58,14 @@ void OpenWeatherMapClient::updateWeather() {
 
   while(weatherClient.connected() && !weatherClient.available()) delay(1); //waits for data
  
-  Serial.println("Waiting for data");
+  Serial.println("*OWMC: Waiting for data...");
 
   // Check HTTP status
   char status[32] = {0};
   weatherClient.readBytesUntil('\r', status, sizeof(status));
-  Serial.println("Response Header: " + String(status));
+  Serial.println("*OWMC: Response Header: " + String(status));
   if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
-    Serial.print(F("Unexpected response: "));
+    Serial.print(F("*OWMC: Unexpected response: "));
     Serial.println(status);
     weathers[0].error = "Weather Data Error: " + String(status);
     return;
@@ -74,51 +74,49 @@ void OpenWeatherMapClient::updateWeather() {
     // Skip HTTP headers
   char endOfHeaders[] = "\r\n\r\n";
   if (!weatherClient.find(endOfHeaders)) {
-    Serial.println(F("Invalid response"));
+    Serial.println(F("*OWMC: Invalid response"));
     return;
   }
 
-  const size_t bufferSize = 710;
-  DynamicJsonBuffer jsonBuffer(bufferSize);
-
-  // Parse JSON object
-  JsonObject& root = jsonBuffer.parseObject(weatherClient);
-  if (!root.success()) {
-    Serial.println(F("Weather Data Parsing failed!"));
-    weathers[0].error = "Weather Data Parsing failed!";
+  const size_t capacity = 2*JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(1) + 3*JSON_OBJECT_SIZE(2) + 2*JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(10) + 270;
+  DynamicJsonDocument doc(capacity);
+  DeserializationError error = deserializeJson(doc, weatherClient);
+  if (error) {
+    Serial.print(F("*OWMC: JsonDeserealization error "));
+    Serial.println(error.c_str());
     return;
   }
 
   weatherClient.stop(); //stop client
 
-  if (root.measureLength() <= 150) {
-    Serial.println("Error Does not look like we got the data.  Size: " + String(root.measureLength()));
+  if (doc.size() <= 1) {
+    Serial.println("*OWMC: Error Does not look like we got the data.  Size: " + String(doc.size()));
     weathers[0].cached = true;
-    weathers[0].error = (const char*)root["message"];
-    Serial.println("Error: " + weathers[0].error);
+    weathers[0].error = (const char*)doc["message"];
+    Serial.println("*OWMC: Error: " + weathers[0].error);
     return;
   }
-  int count = root["cnt"];
+  int count = doc["cnt"];
 
   for (int inx = 0; inx < count; inx++) {
-    weathers[inx].lat = (const char*)root["list"][inx]["coord"]["lat"];
-    weathers[inx].lon = (const char*)root["list"][inx]["coord"]["lon"];
-    weathers[inx].dt = (const char*)root["list"][inx]["dt"];
-    weathers[inx].city = (const char*)root["list"][inx]["name"];
-    weathers[inx].country = (const char*)root["list"][inx]["sys"]["country"];
-    weathers[inx].temp = (const char*)root["list"][inx]["main"]["temp"];
-    weathers[inx].feels_like = (const char*)root["list"][inx]["main"]["feels_like"];
-    weathers[inx].humidity = (const char*)root["list"][inx]["main"]["humidity"];
-    weathers[inx].condition = (const char*)root["list"][inx]["weather"][0]["main"];
-    weathers[inx].wind = (const char*)root["list"][inx]["wind"]["speed"];
-    weathers[inx].weatherId = (const char*)root["list"][inx]["weather"][0]["id"];
-    weathers[inx].description = (const char*)root["list"][inx]["weather"][0]["description"];
-    weathers[inx].icon = (const char*)root["list"][inx]["weather"][0]["icon"];
-    weathers[inx].pressure = (const char*)root["list"][inx]["main"]["pressure"];
-    weathers[inx].direction = (const char*)root["list"][inx]["wind"]["deg"];
-    weathers[inx].high = (const char*)root["list"][inx]["main"]["temp_max"];
-    weathers[inx].low = (const char*)root["list"][inx]["main"]["temp_min"];
-    weathers[inx].timeZone = (const char*)root["list"][inx]["sys"]["timezone"];
+    weathers[inx].lat =                 String((float)doc["list"][inx]["coord"]["lat"]);
+    weathers[inx].lon =                 String((float)doc["list"][inx]["coord"]["lon"]);
+    weathers[inx].dt =                   String((long)doc["list"][inx]["dt"]);
+    weathers[inx].city =                 (const char*)doc["list"][inx]["name"];
+    weathers[inx].country =              (const char*)doc["list"][inx]["sys"]["country"];
+    weathers[inx].timeZone =              String((int)doc["list"][inx]["sys"]["timezone"]);
+    weathers[inx].temp =                  String((int)doc["list"][inx]["main"]["temp"]);
+    weathers[inx].feels_like =          String((float)doc["list"][inx]["main"]["feels_like"]);
+    weathers[inx].humidity =              String((int)doc["list"][inx]["main"]["humidity"]);
+    weathers[inx].pressure =              String((int)doc["list"][inx]["main"]["pressure"]);
+    weathers[inx].high =                  String((int)doc["list"][inx]["main"]["temp_max"]);
+    weathers[inx].low =                   String((int)doc["list"][inx]["main"]["temp_min"]);
+    weathers[inx].condition =            (const char*)doc["list"][inx]["weather"][0]["main"];
+    weathers[inx].weatherId =             String((int)doc["list"][inx]["weather"][0]["id"]);
+    weathers[inx].description =          (const char*)doc["list"][inx]["weather"][0]["description"];
+    weathers[inx].icon =                 (const char*)doc["list"][inx]["weather"][0]["icon"];
+    weathers[inx].wind =                  String((int)doc["list"][inx]["wind"]["speed"]);
+    weathers[inx].direction =             String((int)doc["list"][inx]["wind"]["deg"]);
 
     if (units == "metric") {
       // convert to kph from m/s
@@ -132,21 +130,21 @@ void OpenWeatherMapClient::updateWeather() {
       weathers[inx].pressure = String(p);
     }
     
-    Serial.println("*WC: lat: " + weathers[inx].lat);
-    Serial.println("*WC: lon: " + weathers[inx].lon);
-    Serial.println("*WC: dt: " + weathers[inx].dt);
-    Serial.println("*WC: city: " + weathers[inx].city);
-    Serial.println("*WC: country: " + weathers[inx].country);
-    Serial.println("*WC: temp: " + weathers[inx].temp);
-    Serial.println("*WC: feels_like: " + weathers[inx].feels_like);
-    Serial.println("*WC: humidity: " + weathers[inx].humidity);
-    Serial.println("*WC: condition: " + weathers[inx].condition);
-    Serial.println("*WC: wind: " + weathers[inx].wind);
-    Serial.println("*WC: direction: " + weathers[inx].direction);
-    Serial.println("*WC: weatherId: " + weathers[inx].weatherId);
-    Serial.println("*WC: description: " + weathers[inx].description);
-    Serial.println("*WC: icon: " + weathers[inx].icon);
-    Serial.println("*WC: timezone: " + String(getTimeZone(inx)));
+    Serial.println("*OWMC: lat: " + weathers[inx].lat);
+    Serial.println("*OWMC: lon: " + weathers[inx].lon);
+    Serial.println("*OWMC: dt: " + weathers[inx].dt);
+    Serial.println("*OWMC: city: " + weathers[inx].city);
+    Serial.println("*OWMC: country: " + weathers[inx].country);
+    Serial.println("*OWMC: temp: " + weathers[inx].temp);
+    Serial.println("*OWMC: feels_like: " + weathers[inx].feels_like);
+    Serial.println("*OWMC: humidity: " + weathers[inx].humidity);
+    Serial.println("*OWMC: condition: " + weathers[inx].condition);
+    Serial.println("*OWMC: wind: " + weathers[inx].wind);
+    Serial.println("*OWMC: direction: " + weathers[inx].direction);
+    Serial.println("*OWMC: weatherId: " + weathers[inx].weatherId);
+    Serial.println("*OWMC: description: " + weathers[inx].description);
+    Serial.println("*OWMC: icon: " + weathers[inx].icon);
+    Serial.println("*OWMC: timezone: " + String(getTimeZone(inx)));
     Serial.println();
     
   }

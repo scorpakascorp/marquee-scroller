@@ -44,13 +44,13 @@ void NewsApiClient::updateNews() {
 
   String apiGetData = "http://" + String(servername) + "/v2/top-headlines?sources=" + mySource + "&apiKey=" + myApiKey;
 
-  Serial.println("Getting News Data");
+  Serial.println("*NAC: Getting News Data");
   Serial.println(apiGetData);
   http.begin(apiGetData);
   int httpCode = http.GET();
 
   if (httpCode > 0) {  // checks for connection
-    Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+    Serial.printf("*NAC: [HTTP] GET... code: %d\n", httpCode);
     if(httpCode == HTTP_CODE_OK) {
       // get lenght of document (is -1 when Server sends no Content-Length header)
       int len = http.getSize();
@@ -59,7 +59,7 @@ void NewsApiClient::updateNews() {
       // get tcp stream
       WiFiClient * stream = http.getStreamPtr();
       // read all data from server
-      Serial.println("Start parsing...");
+      Serial.println("*NAC: Start parsing...");
       while(http.connected() && (len > 0 || len == -1)) {
         // get available data size
         size_t size = stream->available();
@@ -78,7 +78,7 @@ void NewsApiClient::updateNews() {
     }
     http.end();
   } else {
-    Serial.println("connection for news data failed: " + String(apiGetData)); //error message if no client connect
+    Serial.println("*NAC: connection for news data failed: " + String(apiGetData)); //error message if no client connect
     Serial.println();
     return;
   }
@@ -128,7 +128,7 @@ void NewsApiClient::value(String value) {
     counterTitle++;
   }
 
-  Serial.println(currentKey + "=" + value);
+  Serial.println("*NAC: " + currentKey + "=" + value);
 }
 
 void NewsApiClient::endArray() {

@@ -39,8 +39,8 @@ time_t TimeDB::getTime()
 {
   WiFiClient client;
   String apiGetData = "GET /v2.1/get-time-zone?key=" + myApiKey + "&format=json&by=position&lat=" + myLat + "&lng=" + myLon + " HTTP/1.1";
-  Serial.println("Getting Time Data for " + myLat + "," + myLon);
-  Serial.println(apiGetData);
+  Serial.println("*TDB: Getting Time Data for " + myLat + "," + myLon);
+  Serial.println("*TDB: " + apiGetData);
   String result = "";
   if (client.connect(servername, 80)) {  //starts client connection, checks for connection
     client.println(apiGetData);
@@ -50,14 +50,14 @@ time_t TimeDB::getTime()
     client.println();
   }
   else {
-    Serial.println("connection for time data failed"); //error message if no client connect
+    Serial.println("*TDB: Connection for time data failed"); //error message if no client connect
     Serial.println();
     return 20;
   }
 
   while (client.connected() && !client.available()) delay(1); //waits for data
 
-  Serial.println("Waiting for data");
+  Serial.println("*TDB: Waiting for data");
 
   boolean record = false;
   while (client.connected() || client.available()) { //connected or data available
@@ -73,19 +73,27 @@ time_t TimeDB::getTime()
     }
   }
   client.stop(); //stop client
-  Serial.println(result);
+  Serial.println("*TDB: " + result);
 
   char jsonArray [result.length() + 1];
   result.toCharArray(jsonArray, sizeof(jsonArray));
   jsonArray[result.length() + 1] = '\0';
-  DynamicJsonBuffer json_buf;
-  JsonObject& root = json_buf.parseObject(jsonArray);
+  
+  const size_t capacity = JSON_OBJECT_SIZE(13) + 220;
+  DynamicJsonDocument doc(capacity);
+  DeserializationError error = deserializeJson(doc, jsonArray);
+  if (error) {
+    Serial.print(F("*TDB: JsonDeserealization error "));
+    Serial.println(error.c_str());
+    return 20;
+  }
+
   localMillisAtUpdate = millis();
   Serial.println();
-  if (root["timestamp"] == 0) {
+  if (doc["timestamp"] == 0) {
     return 20;
   } else {
-    return (unsigned long) root["timestamp"];
+    return (unsigned long) doc["timestamp"];
   }
 }
 

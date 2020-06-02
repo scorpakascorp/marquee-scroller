@@ -82,25 +82,22 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
   //Clean dirty results
   result.remove(0, result.indexOf("{"));
   result.remove(result.lastIndexOf("}") + 1);
-  Serial.println("Results:");
-  Serial.println(result);
-  Serial.println("End");
 
   char jsonArray [result.length()+1];
   result.toCharArray(jsonArray,sizeof(jsonArray));
   //jsonArray[result.length() + 1] = '\0';
-  DynamicJsonBuffer json_buf;
-  JsonObject& root = json_buf.parseObject(jsonArray);
-
-  if (!root.success()) {
-    Serial.println(F("Bitcoin Data Parsing failed!"));
+  DynamicJsonDocument doc(1024);
+  DeserializationError error = deserializeJson(doc, jsonArray);
+  if (error) {
+    Serial.print(F("BitCoinAppClient: JsonDeserealization error "));
+    Serial.println(error.c_str());
     return;
   }
   
-  bpiData.code = (const char*)root["bpi"][String(currencyCode)]["code"];
-  bpiData.rate = (const char*)root["bpi"][String(currencyCode)]["rate"];
-  bpiData.description = (const char*)root["bpi"][String(currencyCode)]["description"];
-  bpiData.rate_float = String((const char*)root["bpi"][String(currencyCode)]["rate_float"]).toFloat();
+  bpiData.code = (const char*)doc["bpi"][String(currencyCode)]["code"];
+  bpiData.rate = (const char*)doc["bpi"][String(currencyCode)]["rate"];
+  bpiData.description = (const char*)doc["bpi"][String(currencyCode)]["description"];
+  bpiData.rate_float = String((const char*)doc["bpi"][String(currencyCode)]["rate_float"]).toFloat();
 
   Serial.println("code: " + bpiData.code);
   Serial.println("rate: " + bpiData.rate);

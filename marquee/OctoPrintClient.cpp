@@ -111,25 +111,25 @@ void OctoPrintClient::getPrinterJobResults() {
   }
 
   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + 2*JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(6) + 710;
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
-  // Parse JSON object
-  JsonObject& root = jsonBuffer.parseObject(printClient);
-  if (!root.success()) {
-    Serial.println(F("OctoPrint Data Parsing failed!"));
+  DeserializationError error = deserializeJson(doc, printClient);
+  if (error) {
+    Serial.print(F("BitCoinAppClient: JsonDeserealization error "));
+    Serial.println(error.c_str());
     return;
   }
   
-  printerData.averagePrintTime = (const char*)root["job"]["averagePrintTime"];
-  printerData.estimatedPrintTime = (const char*)root["job"]["estimatedPrintTime"];
-  printerData.fileName = (const char*)root["job"]["file"]["name"];
-  printerData.fileSize = (const char*)root["job"]["file"]["size"];
-  printerData.lastPrintTime = (const char*)root["job"]["lastPrintTime"];
-  printerData.progressCompletion = (const char*)root["progress"]["completion"];
-  printerData.progressFilepos = (const char*)root["progress"]["filepos"];
-  printerData.progressPrintTime = (const char*)root["progress"]["printTime"];
-  printerData.progressPrintTimeLeft = (const char*)root["progress"]["printTimeLeft"];
-  printerData.state = (const char*)root["state"];
+  printerData.averagePrintTime = (const char*)doc["job"]["averagePrintTime"];
+  printerData.estimatedPrintTime = (const char*)doc["job"]["estimatedPrintTime"];
+  printerData.fileName = (const char*)doc["job"]["file"]["name"];
+  printerData.fileSize = (const char*)doc["job"]["file"]["size"];
+  printerData.lastPrintTime = (const char*)doc["job"]["lastPrintTime"];
+  printerData.progressCompletion = (const char*)doc["progress"]["completion"];
+  printerData.progressFilepos = (const char*)doc["progress"]["filepos"];
+  printerData.progressPrintTime = (const char*)doc["progress"]["printTime"];
+  printerData.progressPrintTimeLeft = (const char*)doc["progress"]["printTimeLeft"];
+  printerData.state = (const char*)doc["state"];
 
   if (isPrinting()) {
     Serial.println("Status: " + printerData.state + " " + printerData.fileName + "(" + printerData.progressCompletion + "%)");

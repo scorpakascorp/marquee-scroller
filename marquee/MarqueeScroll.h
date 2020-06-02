@@ -18,6 +18,7 @@
 // #include <fonts/TomThumb.h>
 #include <Max72xxPanel.h> // --> https://github.com/markruys/arduino-Max72xxPanel
 #include <pgmspace.h>
+#include <ArduinoJson.h>
 
 #include "OpenWeatherMapClient.h"
 #include "TimeDB.h"
@@ -44,7 +45,7 @@ String getSpeedSymbol();
 String getTempSymbol();
 String getTempSymbolWeb();
 String getTimeTillUpdate();
-void getWeatherData();
+void getUpdatedData();
 int8_t getWifiQuality();
 void handleBitcoinConfigure();
 void handleConfigure();
@@ -106,14 +107,14 @@ int newsIndex = 0;
 OpenWeatherMapClient weatherClient(APIKEY, CityIDs, 1, IS_METRIC);
 // (some) Default Weather Settings
 boolean SHOW_FEELSLIKE = true;
-boolean SHOW_DATE = false;
-boolean SHOW_CITY = true;
+boolean SHOW_DATE = true;
+boolean SHOW_CITY = false;
 boolean SHOW_CONDITION = true;
 boolean SHOW_HUMIDITY = true;
 boolean SHOW_WIND = true;
 boolean SHOW_WINDDIR = true;
 boolean SHOW_PRESSURE = false;
-boolean SHOW_HIGHLOW = true;
+boolean SHOW_HIGHLOW = false;
 
 // OctoPrint Client
 OctoPrintClient printerClient(OctoPrintApiKey, OctoPrintServer, OctoPrintPort, OctoAuthUser, OctoAuthPass);
