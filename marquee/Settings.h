@@ -57,9 +57,9 @@ boolean IS_24HOUR = true; // 23:00 millitary 24 hour clock
 boolean IS_PM = false; // Show PM indicator on Clock when in AM/PM mode
 const int WEBSERVER_PORT = 80; // The port you can access this device on over HTTP
 const boolean WEBSERVER_ENABLED = true;  // Device will provide a web interface via http://[ip]:[port]/
-boolean IS_BASIC_AUTH = false;  // Use Basic Authorization for Configuration security on Web Interface
-char* www_username = "admin";  // User account for the Web Interface
-char* www_password = "password";  // Password for the Web Interface
+boolean WEB_INTERFACE_AUTH_ENABLED = false;  // Use Basic Authorization for Configuration security on Web Interface
+String WEB_INTERFACE_USER = "admin";  // User account for the Web Interface
+String WEB_INTERFACE_PASS = "password";  // Password for the Web Interface
 int minutesBetweenDataRefresh = 15;  // Time in minutes between data refresh (default 15 minutes)
 int minutesBetweenScrolling = 1; // Time in minutes between scrolling data (default 1 minutes and max is 10)
 int displayScrollSpeed = 25; // In milliseconds -- Configurable by the web UI (slow = 35, normal = 25, fast = 15, very fast = 5)
@@ -86,7 +86,7 @@ boolean WEATHER_HIGHLOW = false;
 // CS  -> D6 
 // DIN -> D7 (MOSI)
 const int pinCS = D6; // Attach CS to this pin, DIN to MOSI and CLK to SCK (cf http://arduino.cc/en/Reference/SPI )
-int displayIntensity = 1;  //(This can be set from 0 - 15)
+int LED_BRIGHTNESS = 1;  //(This can be set from 0 - 15)
 const int numberOfHorizontalDisplays = 8; // default 4 for standard 4 x 1 display Max size of 16
 const int numberOfVerticalDisplays = 1; // default 1 for a single row height
 /* set ledRotation for LED Display panels (3 is default)
@@ -97,25 +97,25 @@ const int numberOfVerticalDisplays = 1; // default 1 for a single row height
 */
 int ledRotation = 3;
 
-String timeDisplayTurnsOn = "06:30";  // 24 Hour Format HH:MM -- Leave blank for always on. (ie 05:30)
-String timeDisplayTurnsOff = "23:00"; // 24 Hour Format HH:MM -- Leave blank for always on. Both must be set to work.
+String TIME_TO_DISPLAY_ON = "06:30";  // 24 Hour Format HH:MM -- Leave blank for always on. (ie 05:30)
+String TIME_TO_DISPLAY_OFF = "23:00"; // 24 Hour Format HH:MM -- Leave blank for always on. Both must be set to work.
 
 // OctoPrint Monitoring -- Monitor your 3D printer OctoPrint Server
 boolean OCTOPRINT_ENABLED = false;
 boolean OCTOPRINT_PROGRESS = true;
-String OctoPrintApiKey = "";  // ApiKey from your User Account on OctoPrint
-String OctoPrintServer = "";  // IP or Address of your OctoPrint Server (DO NOT include http://)
-int OctoPrintPort = 80;       // the port you are running your OctoPrint server on (usually 80);
-String OctoAuthUser = "";     // only used if you have haproxy or basic athentintication turned on (not default)
-String OctoAuthPass = "";     // only used with haproxy or basic auth (only needed if you must authenticate)
+String OCTOPRINT_API_KEY = "";  // ApiKey from your User Account on OctoPrint
+String OCTOPRINT_SERVER = "";  // IP or Address of your OctoPrint Server (DO NOT include http://)
+int OCTOPRINT_PORT = 80;       // the port you are running your OctoPrint server on (usually 80);
+String OCTOPRINT_USER = "";     // only used if you have haproxy or basic athentintication turned on (not default)
+String OCTOPRINT_PASS = "";     // only used with haproxy or basic auth (only needed if you must authenticate)
 
 // Bitcoin Client - NONE or empty is off
 String BitcoinCurrencyCode = "NONE";  // Change to USD, GBD, EUR, or NONE -- this can be managed in the Web Interface
 
 // Pi-hole Client -- monitor basic stats from your Pi-hole server (see http://pi-hole.net)
-boolean USE_PIHOLE = false;   // Set true to display your Pi-hole details
-String PiHoleServer = "";     // IP or Address only (DO NOT include http://)
-int PiHolePort = 80;          // Port of your Pi-hole address (default 80)
+boolean PIHOLE_ENABLED = false;   // Set true to display your Pi-hole details
+String PIHOLE_SERVER = "";     // IP or Address only (DO NOT include http://)
+int PIHOLE_PORT = 80;          // Port of your Pi-hole address (default 80)
 
 boolean ENABLE_OTA = true;    // this will allow you to load firmware to the device over WiFi (see OTA for ESP8266)
 String OTA_Password = "";     // Set an OTA password here -- leave blank if you don't want to be prompted for password

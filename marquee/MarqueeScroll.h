@@ -103,7 +103,7 @@ OpenWeatherMapClient weatherClient(WEATHER_API_KEY, CityIDs, 1, IS_METRIC);
 
 
 // OctoPrint Client
-OctoPrintClient printerClient(OctoPrintApiKey, OctoPrintServer, OctoPrintPort, OctoAuthUser, OctoAuthPass);
+OctoPrintClient printerClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER, OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
 int printerCount = 0;
 
 // Pi-hole Client
@@ -159,10 +159,10 @@ static const char CHANGE_FORM1[] PROGMEM = R"=====(
 static const char CHANGE_FORM2[] PROGMEM = R"=====(
   <p><input name='isPM' class='w3-check w3-margin-top' type='checkbox' %IS_PM_CHECKED%> Show PM indicator (only 12h format)</p>
   <p><input name='flashseconds' class='w3-check w3-margin-top' type='checkbox' %FLASHSECONDS%> Flash : in the time</p>
-  <p><label>Marquee Message (up to 60 chars)</label><input class='w3-input w3-border w3-margin-bottom' type='text' name='marqueeMsg' value='%MSG%' maxlength='60'></p>
-  <p><label>Start Time </label><input name='startTime' type='time' value='%STARTTIME%'></p>
-  <p><label>End Time </label><input name='endTime' type='time' value='%ENDTIME%'></p>
-  <p>Display Brightness <input class='w3-border w3-margin-bottom' name='ledintensity' type='number' min='0' max='15' value='%INTENSITYOPTIONS%'></p>
+  <p><label>Marquee Message (up to 60 chars)</label><input class='w3-input w3-border w3-margin-bottom' type='text' name='marqueeMsg' value='%USER_MESSAGE%' maxlength='60'></p>
+  <p><label>Start Time </label><input name='startTime' type='time' value='%TIME_TO_DISPLAY_ON%'></p>
+  <p><label>End Time </label><input name='endTime' type='time' value='%TIME_TO_DISPLAY_OFF%'></p>
+  <p>Display Brightness <input class='w3-border w3-margin-bottom' name='ledintensity' type='number' min='0' max='15' value='%LED_BRIGHTNESS%'></p>
   <p>Display Scroll Speed <select class='w3-option w3-padding' name='scrollspeed'>%SCROLLOPTIONS%</select></p>
   <p>Minutes Between Refresh Data <select class='w3-option w3-padding' name='refresh'>%OPTIONS%</select></p>
   <p>Minutes Between Scrolling Data <input class='w3-border w3-margin-bottom' name='refreshDisplay' type='number' min='1' max='10' value='%REFRESH_DISPLAY%'></p>
@@ -187,7 +187,6 @@ static const char CURRENCY_OPTIONS[] PROGMEM = R"=====(
     <option value='USD'>United States Dollar</option>
     <option value='AUD'>Australian Dollar</option>
     <option value='BRL'>Brazilian Real</option>
-    <option value='BTC'>Bitcoin</option>
     <option value='CAD'>Canadian Dollar</option>
     <option value='CNY'>Chinese Yuan</option>
     <option value='EUR'>Euro</option>
@@ -220,11 +219,11 @@ static const char PIHOLE_TEST[] PROGMEM = R"=====(
 
 static const char NEWS_FORM1[] PROGMEM = R"=====(
   <form class='w3-container' action='/savenews' method='get'><h2>News Configuration:</h2>
-  <p><input name='displaynews' class='w3-check w3-margin-top' type='checkbox' %NEWSCHECKED%> Display News Headlines</p>
+  <p><input name='displaynews' class='w3-check w3-margin-top' type='checkbox' %NEWS_ENABLED%> Display News Headlines</p>
   <label>News API Key (get from <a href='https://newsapi.org/' target='_BLANK'>here</a>)</label>
-  <input class='w3-input w3-border w3-margin-bottom' type='text' name='newsApiKey' value='%NEWSKEY%' maxlength='60'>
+  <input class='w3-input w3-border w3-margin-bottom' type='text' name='NEWS_API_KEY' value='%NEWS_API_KEY%' maxlength='60'>
   <p>Select News Source <select class='w3-option w3-padding' name='newssource' id='newssource'></select></p>
-  <script>var s='%NEWSSOURCE%';var tt;var xmlhttp=new XMLHttpRequest();xmlhttp.open('GET','https://raw.githubusercontent.com/Qrome/marquee-scroller/master/sources.json',!0);
+  <script>var s='%NEWS_SOURCE%';var tt;var xmlhttp=new XMLHttpRequest();xmlhttp.open('GET','https://raw.githubusercontent.com/Qrome/marquee-scroller/master/sources.json',!0);
   xmlhttp.onreadystatechange=function(){if(xmlhttp.readyState==4){if(xmlhttp.status==200){var obj=JSON.parse(xmlhttp.responseText);
   obj.sources.forEach(t)}}};xmlhttp.send();function t(it){if(it!=null){if(s==it.id){se=' selected'}else{se=''}tt+='<option'+se+'>'+it.id+'</option>';
   document.getElementById('newssource').innerHTML=tt}}</script>

@@ -26,7 +26,7 @@
 void setup() {
   Serial.begin(115200);
   LittleFS.begin();
-  //LittleFS.remove(CONFIG);
+  //LittleFS.remove(CONFIG_JSON);
   delay(10);
 
   // Initialize digital pin for LED
@@ -51,26 +51,26 @@ void setup() {
 
   Serial.println("*setup(): Matrix created");
   matrix.fillScreen(LOW); // show black
-  centerPrint("hello");
+  centerPrint("-*-");
 
-  tone(BUZZER_PIN, 415, 500);
-  delay(500 * 1.3);
-  tone(BUZZER_PIN, 466, 500);
-  delay(500 * 1.3);
-  tone(BUZZER_PIN, 370, 1000);
-  delay(1000 * 1.3);
-  noTone(BUZZER_PIN);
+  // tone(BUZZER_PIN, 415, 500);
+  // delay(500 * 1.3);
+  // tone(BUZZER_PIN, 466, 500);
+  // delay(500 * 1.3);
+  // tone(BUZZER_PIN, 370, 1000);
+  // delay(1000 * 1.3);
+  // noTone(BUZZER_PIN);
 
   for (int inx = 0; inx <= 15; inx++) {
     matrix.setIntensity(inx);
-    delay(100);
+    delay(60);
   }
   for (int inx = 15; inx >= 0; inx--) {
     matrix.setIntensity(inx);
-    delay(60);
+    delay(30);
   }
-  delay(1000);
-  matrix.setIntensity(displayIntensity);
+  delay(100);
+  matrix.setIntensity(LED_BRIGHTNESS);
   //noTone(BUZZER_PIN);
 
   //WiFiManager
@@ -142,7 +142,7 @@ void setup() {
     server.on("/configurepihole", handlePiholeConfigure);
     server.on("/display", handleDisplay);
     server.onNotFound(redirectHome);
-    serverUpdater.setup(&server, "/update", www_username, www_password);
+    serverUpdater.setup(&server, "/update", WEB_INTERFACE_USER, WEB_INTERFACE_PASS);
     // Start the server
     server.begin();
     Serial.println("*setup(): Server started");
@@ -235,7 +235,7 @@ void loop() {
       }
       //line to show barometric pressure
       if (WEATHER_PRESSURE) {
-        msg += "Pressure:" + weatherClient.getPressure(0) + getPressureSymbol();
+        msg += "Press: " + weatherClient.getPressure(0) + getPressureSymbol();
         msg += scrollSpacer;
       }
 
@@ -261,9 +261,9 @@ void loop() {
         msg += "Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode();
         msg += scrollSpacer;;
       }
-      if (USE_PIHOLE) {
-        piholeClient.getPiHoleData(PiHoleServer, PiHolePort);
-        piholeClient.getGraphData(PiHoleServer, PiHolePort);
+      if (PIHOLE_ENABLED) {
+        piholeClient.getPiHoleData(PIHOLE_SERVER, PIHOLE_PORT);
+        piholeClient.getGraphData(PIHOLE_SERVER, PIHOLE_PORT);
         if (piholeClient.getPiHoleStatus() != "") {
           msg += "Pi-hole (" + piholeClient.getPiHoleStatus() + "): " + piholeClient.getAdsPercentageToday() + "%";
           msg += scrollSpacer; 
@@ -322,8 +322,8 @@ String secondsIndicator(boolean isRefresh) {
 }
 
 boolean athentication() {
-  if (IS_BASIC_AUTH) {
-    return server.authenticate(www_username, www_password);
+  if (WEB_INTERFACE_AUTH_ENABLED) {
+    return server.authenticate(WEB_INTERFACE_USER.c_str(), WEB_INTERFACE_PASS.c_str());
   }
   return true; // Authentication not required
 }
@@ -360,7 +360,7 @@ void handleSaveNews() {
     return server.requestAuthentication();
   }
   NEWS_ENABLED = server.hasArg("displaynews");
-  NEWS_API_KEY = server.arg("newsApiKey");
+  NEWS_API_KEY = server.arg("NEWS_API_KEY");
   NEWS_SOURCE = server.arg("newssource");
   matrix.fillScreen(LOW); // show black
   writeConfigJson();
@@ -374,11 +374,11 @@ void handleSaveOctoprint() {
   }
   OCTOPRINT_ENABLED = server.hasArg("displayoctoprint");
   OCTOPRINT_PROGRESS = server.hasArg("octoprintprogress");
-  OctoPrintApiKey = server.arg("octoPrintApiKey");
-  OctoPrintServer = server.arg("octoPrintAddress");
-  OctoPrintPort = server.arg("octoPrintPort").toInt();
-  OctoAuthUser = server.arg("octoUser");
-  OctoAuthPass = server.arg("octoPass");
+  OCTOPRINT_API_KEY = server.arg("octoPrintApiKey");
+  OCTOPRINT_SERVER = server.arg("octoPrintAddress");
+  OCTOPRINT_PORT = server.arg("octoPrintPort").toInt();
+  OCTOPRINT_USER = server.arg("octoUser");
+  OCTOPRINT_PASS = server.arg("octoPass");
   matrix.fillScreen(LOW); // show black
   writeConfigJson();
   if (OCTOPRINT_ENABLED) {
@@ -391,13 +391,13 @@ void handleSavePihole() {
   if (!athentication()) {
     return server.requestAuthentication();
   }
-  USE_PIHOLE = server.hasArg("displaypihole");
-  PiHoleServer = server.arg("piholeAddress");
-  PiHolePort = server.arg("piholePort").toInt();
+  PIHOLE_ENABLED = server.hasArg("displaypihole");
+  PIHOLE_SERVER = server.arg("piholeAddress");
+  PIHOLE_PORT = server.arg("piholePort").toInt();
   writeConfigJson();
-  if (USE_PIHOLE) {
-    piholeClient.getPiHoleData(PiHoleServer, PiHolePort);
-    piholeClient.getGraphData(PiHoleServer, PiHolePort);
+  if (PIHOLE_ENABLED) {
+    piholeClient.getPiHoleData(PIHOLE_SERVER, PIHOLE_PORT);
+    piholeClient.getGraphData(PIHOLE_SERVER, PIHOLE_PORT);
   }
   redirectHome();
 }
@@ -422,17 +422,19 @@ void handleLocations() {
   WEATHER_HIGHLOW = server.hasArg("showhighlow");
   IS_METRIC = server.hasArg("metric");
   USER_MESSAGE = decodeHtmlString(server.arg("marqueeMsg"));
-  timeDisplayTurnsOn = decodeHtmlString(server.arg("startTime"));
-  timeDisplayTurnsOff = decodeHtmlString(server.arg("endTime"));
-  displayIntensity = server.arg("ledintensity").toInt();
+  TIME_TO_DISPLAY_ON = decodeHtmlString(server.arg("startTime"));
+  TIME_TO_DISPLAY_OFF = decodeHtmlString(server.arg("endTime"));
+  LED_BRIGHTNESS = server.arg("LED_BRIGHTNESS").toInt();
   minutesBetweenDataRefresh = server.arg("refresh").toInt();
   minutesBetweenScrolling = server.arg("refreshDisplay").toInt();
   displayScrollSpeed = server.arg("scrollspeed").toInt();
-  IS_BASIC_AUTH = server.hasArg("isBasicAuth");
-  String temp = server.arg("userid");
-  temp.toCharArray(www_username, sizeof(temp));
-  temp = server.arg("stationpassword");
-  temp.toCharArray(www_password, sizeof(temp));
+  WEB_INTERFACE_AUTH_ENABLED = server.hasArg("isBasicAuth");
+  // String temp = server.arg("userid");
+  // temp.toCharArray(WEB_INTERFACE_USER, sizeof(temp));
+  // temp = server.arg("stationpassword");
+  // temp.toCharArray(WEB_INTERFACE_PASS, sizeof(temp));
+  WEB_INTERFACE_USER = server.arg("userid");
+  WEB_INTERFACE_PASS = server.arg("stationpassword");
   weatherClient.setMetric(IS_METRIC);
   matrix.fillScreen(LOW); // show black
   writeConfigJson();
@@ -536,13 +538,13 @@ void handleNewsConfigure() {
   sendHeader();
 
   String form = FPSTR(NEWS_FORM1);
-  String isNewsDisplayedChecked = "";
+  String NEWS_ENABLED = "";
   if (NEWS_ENABLED) {
-    isNewsDisplayedChecked = "checked='checked'";
+    NEWS_ENABLED = "checked='checked'";
   }
-  form.replace("%NEWSCHECKED%", isNewsDisplayedChecked);
-  form.replace("%NEWSKEY%", NEWS_API_KEY);
-  form.replace("%NEWSSOURCE%", NEWS_SOURCE);
+  form.replace("%NEWS_ENABLED%", NEWS_ENABLED);
+  form.replace("%NEWS_API_KEY%", NEWS_API_KEY);
+  form.replace("%NEWS_SOURCE%", NEWS_SOURCE);
   server.sendContent(form); //Send news form
 
   sendFooter();
@@ -577,11 +579,11 @@ void handleOctoprintConfigure() {
     isOctoPrintProgressChecked = "checked='checked'";
   }
   form.replace("%OCTOPROGRESSCHECKED%", isOctoPrintProgressChecked);
-  form.replace("%OCTOKEY%", OctoPrintApiKey);
-  form.replace("%OCTOADDRESS%", OctoPrintServer);
-  form.replace("%OCTOPORT%", String(OctoPrintPort));
-  form.replace("%OCTOUSER%", OctoAuthUser);
-  form.replace("%OCTOPASS%", OctoAuthPass);
+  form.replace("%OCTOKEY%", OCTOPRINT_API_KEY);
+  form.replace("%OCTOADDRESS%", OCTOPRINT_SERVER);
+  form.replace("%OCTOPORT%", String(OCTOPRINT_PORT));
+  form.replace("%OCTOUSER%", OCTOPRINT_USER);
+  form.replace("%OCTOPASS%", OCTOPRINT_PASS);
   server.sendContent(form);
 
   sendFooter();
@@ -609,12 +611,12 @@ void handlePiholeConfigure() {
 
   String form = FPSTR(PIHOLE_FORM);
   String isPiholeDisplayedChecked = "";
-  if (USE_PIHOLE) {
+  if (PIHOLE_ENABLED) {
     isPiholeDisplayedChecked = "checked='checked'";
   }
   form.replace("%PIHOLECHECKED%", isPiholeDisplayedChecked);
-  form.replace("%PIHOLEADDRESS%", PiHoleServer);
-  form.replace("%PIHOLEPORT%", String(PiHolePort));
+  form.replace("%PIHOLEADDRESS%", PIHOLE_SERVER);
+  form.replace("%PIHOLEPORT%", String(PIHOLE_PORT));
 
   server.sendContent(form);
   form = "";
@@ -724,10 +726,10 @@ void handleConfigure() {
     isFlashSecondsChecked = "checked='checked'";
   }
   form.replace("%FLASHSECONDS%", isFlashSecondsChecked);
-  form.replace("%MSG%", USER_MESSAGE);
-  form.replace("%STARTTIME%", timeDisplayTurnsOn);
-  form.replace("%ENDTIME%", timeDisplayTurnsOff);
-  form.replace("%INTENSITYOPTIONS%", String(displayIntensity));
+  form.replace("%USER_MESSAGE%", USER_MESSAGE);
+  form.replace("%TIME_TO_DISPLAY_ON%", TIME_TO_DISPLAY_ON);
+  form.replace("%TIME_TO_DISPLAY_OFF%", TIME_TO_DISPLAY_OFF);
+  form.replace("%LED_BRIGHTNESS%", String(LED_BRIGHTNESS));
   String dSpeed = String(displayScrollSpeed);
   String scrollOptions = "<option value='35'>Slow</option><option value='25'>Normal</option><option value='15'>Fast</option><option value='10'>Very Fast</option>";
   scrollOptions.replace(dSpeed + "'", dSpeed + "' selected" );
@@ -742,12 +744,12 @@ void handleConfigure() {
 
   form = FPSTR(CHANGE_FORM3);
   String isUseSecurityChecked = "";
-  if (IS_BASIC_AUTH) {
+  if (WEB_INTERFACE_AUTH_ENABLED) {
     isUseSecurityChecked = "checked='checked'";
   }
   form.replace("%IS_BASICAUTH_CHECKED%", isUseSecurityChecked);
-  form.replace("%USERID%", String(www_username));
-  form.replace("%STATIONPASSWORD%", String(www_password));
+  form.replace("%USERID%", String(WEB_INTERFACE_USER));
+  form.replace("%STATIONPASSWORD%", String(WEB_INTERFACE_PASS));
 
   server.sendContent(form); // Send the second chunk of Data
 
@@ -857,7 +859,7 @@ void redirectHome() {
   server.sendHeader("Expires", "-1");
   server.send(302, "text/plain", "");
   server.client().stop();
-  delay(1000);
+  delay(100);
 }
 
 void sendHeader() {
@@ -960,7 +962,7 @@ void displayWeatherData() {
     html += "<img src='http://openweathermap.org/img/w/" + weatherClient.getIcon(0) + ".png' alt='" + weatherClient.getDescription(0) + "'><br>";
     html += weatherClient.getHumidity(0) + "% Humidity<br>";
     html += weatherClient.getDirectionText(0) + " / " + weatherClient.getWind(0) + " <span class='w3-tiny'>" + getSpeedSymbol() + "</span> Wind<br>";
-    html += weatherClient.getPressure(0) + " Pressure<br>";
+    html += weatherClient.getPressure(0) + " <span class='w3-tiny'>" + getPressureSymbol() + "</span> Pressure<br>";
     html += "</div>";
     html += "<div class='w3-cell w3-container' style='width:50%'><p>";
     html += weatherClient.getCondition(0) + " (" + weatherClient.getDescription(0) + ")<br>";
@@ -999,7 +1001,7 @@ void displayWeatherData() {
     html = "";
   }
 
-  if (USE_PIHOLE) {
+  if (PIHOLE_ENABLED) {
     if (piholeClient.getError() == "") {
       html = "<div class='w3-cell-row'><b>Pi-hole</b><br>"
              "Total Queries (" + piholeClient.getUniqueClients() + " clients): <b>" + piholeClient.getDnsQueriesToday() + "</b><br>"
@@ -1154,18 +1156,18 @@ void enableDisplay(boolean enable) {
 
 // Toggle on and off the display if user defined times
 void checkDisplay() {
-  if (timeDisplayTurnsOn == "" || timeDisplayTurnsOff == "") {
+  if (TIME_TO_DISPLAY_ON == "" || TIME_TO_DISPLAY_OFF == "") {
     return; // nothing to do
   }
   String currentTime = TimeDB.zeroPad(hour()) + ":" + TimeDB.zeroPad(minute());
 
-  if (currentTime == timeDisplayTurnsOn && !displayOn) {
+  if (currentTime == TIME_TO_DISPLAY_ON && !displayOn) {
     Serial.println("Time to turn display on: " + currentTime);
     flashLED(1, 500);
     enableDisplay(true);
   }
 
-  if (currentTime == timeDisplayTurnsOff && displayOn) {
+  if (currentTime == TIME_TO_DISPLAY_OFF && displayOn) {
     Serial.println("Time to turn display off: " + currentTime);
     flashLED(2, 500);
     enableDisplay(false);
@@ -1177,45 +1179,52 @@ bool writeConfigJson() {
   DynamicJsonDocument doc(capacity);
 
   doc["TIMEDB_API_KEY"] = TIMEDB_API_KEY;
-  doc["CITYID"] = String(CityIDs[0]);
   doc["USER_MESSAGE"] = USER_MESSAGE;
-  doc["newsSource"] = NEWS_SOURCE;
-  doc["timeDisplayTurnsOn"] = timeDisplayTurnsOn;
-  doc["timeDisplayTurnsOff"] = timeDisplayTurnsOff;
-  doc["ledIntensity"] = String(displayIntensity);
-  doc["scrollSpeed"] = String(displayScrollSpeed);
-  doc["isNews"] = String(NEWS_ENABLED);
-  doc["newsApiKey"] = NEWS_API_KEY;
-  doc["isFlash"] = String(flashOnSeconds);
-  doc["is24hour"] = String(IS_24HOUR);
-  doc["isPM"] = String(IS_PM);
+  doc["TIME_TO_DISPLAY_ON"] = TIME_TO_DISPLAY_ON;
+  doc["TIME_TO_DISPLAY_OFF"] = TIME_TO_DISPLAY_OFF;
+  doc["ledIntensity"] = LED_BRIGHTNESS;
+  doc["scrollSpeed"] = displayScrollSpeed;
+
+  doc["NEWS"]["ENABLED"] = NEWS_ENABLED;
+  doc["NEWS"]["API_KEY"] = NEWS_API_KEY;
+  doc["NEWS"]["SOURCE"] = NEWS_SOURCE;
+
+  doc["isFlash"] = flashOnSeconds;
+  doc["is24hour"] = IS_24HOUR;
+  doc["isPM"] = IS_PM;
   doc["wideclockformat"] = Wide_Clock_Style;
-  doc["isMetric"] = String(IS_METRIC);
-  doc["refreshRate"] = String(minutesBetweenDataRefresh);
-  doc["minutesBetweenScrolling"] = String(minutesBetweenScrolling);
-  doc["isOctoPrint"] = String(OCTOPRINT_ENABLED);
-  doc["isOctoProgress"] = String(OCTOPRINT_PROGRESS);
-  doc["octoKey"] = OctoPrintApiKey;
-  doc["octoServer"] = OctoPrintServer;
-  doc["octoPort"] = String(OctoPrintPort);
-  doc["octoUser"] = OctoAuthUser;
-  doc["octoPass"] = OctoAuthPass;
-  doc["www_username"] = String(www_username);
-  doc["www_password"] = String(www_password);
-  doc["IS_BASIC_AUTH"] = String(IS_BASIC_AUTH);
+  doc["isMetric"] = IS_METRIC;
+  doc["refreshRate"] = minutesBetweenDataRefresh;
+  doc["minutesBetweenScrolling"] = minutesBetweenScrolling;
+
+  doc["OCTOPRINT"]["ENABLED"] = OCTOPRINT_ENABLED;
+  doc["OCTOPRINT"]["PROGRESS"] = OCTOPRINT_PROGRESS;
+  doc["OCTOPRINT"]["KEY"] = OCTOPRINT_API_KEY;
+  doc["OCTOPRINT"]["SERVER"] = OCTOPRINT_SERVER;
+  doc["OCTOPRINT"]["PORT"] = OCTOPRINT_PORT;
+  doc["OCTOPRINT"]["USER"] = OCTOPRINT_USER;
+  doc["OCTOPRINT"]["PASS"] = OCTOPRINT_PASS;
+
+  doc["WEB_INTERFACE"]["AUTH_ENABLED"] = WEB_INTERFACE_AUTH_ENABLED;
+  doc["WEB_INTERFACE"]["USER"] = WEB_INTERFACE_USER;
+  doc["WEB_INTERFACE"]["PASS"] = WEB_INTERFACE_PASS;
+
   doc["BitcoinCurrencyCode"] = BitcoinCurrencyCode;
-  doc["WEATHER_API_KEY"] = WEATHER_API_KEY;
-  doc["WEATHER_CITY"] = String(WEATHER_CITY);
-  doc["WEATHER_CONDITION"] = String(WEATHER_CONDITION);
-  doc["WEATHER_HUMIDITY"] = String(WEATHER_HUMIDITY);
-  doc["WEATHER_WIND"] = String(WEATHER_WIND);
-  doc["WEATHER_PRESSURE"] = String(WEATHER_PRESSURE);
-  doc["WEATHER_HIGHLOW"] = String(WEATHER_HIGHLOW);
-  doc["WEATHER_FEELSLIKE"] = String(WEATHER_FEELSLIKE);
-  doc["WEATHER_DATE"] = String(WEATHER_DATE);
-  doc["USE_PIHOLE"] = String(USE_PIHOLE);
-  doc["PiHoleServer"] = PiHoleServer;
-  doc["PiHolePort"] = String(PiHolePort);
+
+  doc["WEATHER"]["API_KEY"] = WEATHER_API_KEY;
+  doc["WEATHER"]["CITY_ID"] = CityIDs[0];
+  doc["WEATHER"]["CITY_NAME"] = WEATHER_CITY;
+  doc["WEATHER"]["CONDITION"] = WEATHER_CONDITION;
+  doc["WEATHER"]["HUMIDITY"] = WEATHER_HUMIDITY;
+  doc["WEATHER"]["WIND"] = WEATHER_WIND;
+  doc["WEATHER"]["PRESSURE"] = WEATHER_PRESSURE;
+  doc["WEATHER"]["HIGHLOW"] = WEATHER_HIGHLOW;
+  doc["WEATHER"]["FEELSLIKE"] = WEATHER_FEELSLIKE;
+  doc["WEATHER"]["DATE"] = WEATHER_DATE;
+
+  doc["PIHOLE"]["ENABLED"] = PIHOLE_ENABLED;
+  doc["PIHOLE"]["SERVER"] = PIHOLE_SERVER;
+  doc["PIHOLE"]["PORT"] = PIHOLE_PORT;
 
   File configFile = LittleFS.open(CONFIG_JSON, "w");
   if (!configFile) {
@@ -1227,6 +1236,11 @@ bool writeConfigJson() {
   configFile.close();
   serializeJsonPretty(doc, Serial);
   Serial.println();
+  newsClient.updateNewsClient(NEWS_API_KEY, NEWS_SOURCE);
+  weatherClient.updateWeatherApiKey(WEATHER_API_KEY);
+  weatherClient.setMetric(IS_METRIC);
+  weatherClient.updateCityIdList(CityIDs, 1);
+  printerClient.updateOctoPrintClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER, OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
   return true;
 }
 
@@ -1249,52 +1263,63 @@ bool readConfigJson() {
   f.close();
 
   TIMEDB_API_KEY = (const char*)doc["TIMEDB_API_KEY"]; 
-  CityIDs[0] = (int)doc["CITYID"]; 
   USER_MESSAGE = (const char*)doc["USER_MESSAGE"]; 
-  NEWS_SOURCE = (const char*)doc["newsSource"]; 
-  timeDisplayTurnsOn = (const char*)doc["timeDisplayTurnsOn"]; 
-  timeDisplayTurnsOff = (const char*)doc["timeDisplayTurnsOff"]; 
-  displayIntensity = (int)doc["ledIntensity"]; 
-  displayScrollSpeed = (int)doc["scrollSpeed"]; 
-  NEWS_ENABLED = (boolean)doc["isNews"]; 
-  NEWS_API_KEY = (const char*)doc["newsApiKey"]; 
-  flashOnSeconds = (boolean)doc["isFlash"]; 
-  IS_24HOUR = (boolean)doc["is24hour"]; 
-  IS_PM = (boolean)doc["isPM"]; 
-  Wide_Clock_Style = (const char*)doc["wideclockformat"]; 
-  IS_METRIC = (boolean)doc["isMetric"]; 
-  minutesBetweenDataRefresh = (int)doc["refreshRate"]; 
-  minutesBetweenScrolling = (int)doc["minutesBetweenScrolling"]; 
-  OCTOPRINT_ENABLED = (boolean)doc["isOctoPrint"]; 
-  OCTOPRINT_PROGRESS = (boolean)doc["isOctoProgress"]; 
-  OctoPrintApiKey = (const char*)doc["octoKey"]; 
-  OctoPrintServer = (const char*)doc["octoServer"]; 
-  OctoPrintPort = (int)doc["octoPort"]; 
-  OctoAuthUser = (const char*)doc["octoUser"]; 
-  OctoAuthPass = (const char*)doc["octoPass"]; 
-  // www_username = doc["www_username"]; 
-  // www_password = doc["www_password"]; 
-  IS_BASIC_AUTH = (boolean)doc["IS_BASIC_AUTH"]; 
-  BitcoinCurrencyCode = (const char*)doc["BitcoinCurrencyCode"]; 
-  WEATHER_API_KEY = (const char*)doc["WEATHER_API_KEY"]; 
-  WEATHER_CITY = (boolean)doc["WEATHER_CITY"]; 
-  WEATHER_CONDITION = (boolean)doc["WEATHER_CONDITION"]; 
-  WEATHER_HUMIDITY = (boolean)doc["WEATHER_HUMIDITY"]; 
-  WEATHER_WIND = (boolean)doc["WEATHER_WIND"]; 
-  WEATHER_PRESSURE = (boolean)doc["WEATHER_PRESSURE"]; 
-  WEATHER_HIGHLOW = (boolean)doc["WEATHER_HIGHLOW"]; 
-  WEATHER_FEELSLIKE = (boolean)doc["WEATHER_FEELSLIKE"]; 
-  WEATHER_DATE = (boolean)doc["WEATHER_DATE"]; 
-  USE_PIHOLE = (boolean)doc["USE_PIHOLE"]; 
-  PiHoleServer = (const char*)doc["PiHoleServer"]; 
-  PiHolePort = (int)doc["PiHolePort"]; 
+  NEWS_SOURCE = (const char*)doc["NEWS_SOURCE"]; 
+  TIME_TO_DISPLAY_ON = (const char*)doc["TIME_TO_DISPLAY_ON"]; 
+  TIME_TO_DISPLAY_OFF = (const char*)doc["TIME_TO_DISPLAY_OFF"]; 
+  LED_BRIGHTNESS = doc["ledIntensity"]; 
+  displayScrollSpeed = doc["scrollSpeed"]; 
+  
+  NEWS_ENABLED = doc["NEWS"]["ENABLED"]; 
+  NEWS_API_KEY = (const char*)doc["NEWS"]["API_KEY"];
+  NEWS_SOURCE = (const char*)doc["NEWS"]["SOURCE"]; 
 
-  matrix.setIntensity(displayIntensity);
+  flashOnSeconds = doc["isFlash"]; 
+  IS_24HOUR = doc["is24hour"]; 
+  IS_PM = doc["isPM"]; 
+  Wide_Clock_Style = (const char*)doc["wideclockformat"]; 
+  IS_METRIC = doc["isMetric"]; 
+  minutesBetweenDataRefresh = doc["refreshRate"]; 
+  minutesBetweenScrolling = doc["minutesBetweenScrolling"];
+
+  OCTOPRINT_ENABLED = doc["OCTOPRINT"]["ENABLED"]; 
+  OCTOPRINT_PROGRESS = doc["OCTOPRINT"]["PROGRESS"]; 
+  OCTOPRINT_API_KEY = (const char*)doc["OCTOPRINT"]["KEY"]; 
+  OCTOPRINT_SERVER = (const char*)doc["OCTOPRINT"]["SERVER"]; 
+  OCTOPRINT_PORT = doc["OCTOPRINT"]["PORT"]; 
+  OCTOPRINT_USER = (const char*)doc["OCTOPRINT"]["USER"]; 
+  OCTOPRINT_PASS = (const char*)doc["OCTOPRINT"]["PASS"]; 
+
+  WEB_INTERFACE_AUTH_ENABLED = doc["WEB_INTERFACE"]["AUTH_ENABLED"];
+  WEB_INTERFACE_USER = (const char*)doc["WEB_INTERFACE"]["USER"]; 
+  WEB_INTERFACE_PASS = (const char*)doc["WEB_INTERFACE"]["PASS"]; 
+
+  BitcoinCurrencyCode = (const char*)doc["BitcoinCurrencyCode"]; 
+
+  WEATHER_API_KEY = (const char*)doc["WEATHER"]["API_KEY"]; 
+  CityIDs[0] = doc["WEATHER"]["CITY_ID"]; 
+  WEATHER_CITY = doc["WEATHER"]["CITY_NAME"]; 
+  WEATHER_CONDITION = doc["WEATHER"]["CONDITION"]; 
+  WEATHER_HUMIDITY = doc["WEATHER"]["HUMIDITY"]; 
+  WEATHER_WIND = doc["WEATHER"]["WIND"]; 
+  WEATHER_PRESSURE = doc["WEATHER"]["PRESSURE"]; 
+  WEATHER_HIGHLOW = doc["WEATHER"]["HIGHLOW"]; 
+  WEATHER_FEELSLIKE = doc["WEATHER"]["FEELSLIKE"]; 
+  WEATHER_DATE = doc["WEATHER"]["DATE"]; 
+
+  PIHOLE_ENABLED = doc["PIHOLE"]["ENABLED"]; 
+  PIHOLE_SERVER = (const char*)doc["PIHOLE"]["SERVER"]; 
+  PIHOLE_PORT = doc["PIHOLE"]["PORT"]; 
+
+  matrix.setIntensity(LED_BRIGHTNESS);
+  //debug
+  Serial.println("NEWS_API_KEY: " + NEWS_API_KEY + " --- NEWS_SOURCE:" + NEWS_SOURCE);
+  ///
   newsClient.updateNewsClient(NEWS_API_KEY, NEWS_SOURCE);
   weatherClient.updateWeatherApiKey(WEATHER_API_KEY);
   weatherClient.setMetric(IS_METRIC);
   weatherClient.updateCityIdList(CityIDs, 1);
-  printerClient.updateOctoPrintClient(OctoPrintApiKey, OctoPrintServer, OctoPrintPort, OctoAuthUser, OctoAuthPass);
+  printerClient.updateOctoPrintClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER, OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
   return true;
 }
 
@@ -1331,7 +1356,7 @@ void scrollMessage(String msg) {
 }
 
 void drawPiholeGraph() {
-  if (!USE_PIHOLE || piholeClient.getBlockedCount() == 0) {
+  if (!PIHOLE_ENABLED || piholeClient.getBlockedCount() == 0) {
     return;
   }
   int count = piholeClient.getBlockedCount();
@@ -1376,10 +1401,6 @@ void drawPiholeGraph() {
   }
 }
 
-// void centerPrint(String msg) {
-//   centerPrint(msg, false);
-// }
-
 void centerPrint(String msg, boolean extraStuff) {
   int x = (matrix.width() - (msg.length() * width)) / 2;
 
@@ -1398,7 +1419,6 @@ void centerPrint(String msg, boolean extraStuff) {
   
   matrix.setCursor(x, 0);
   matrix.print(msg);
-  //Serial.println("Debug - scrolled message: " + msg);
   matrix.write();
 }
 
