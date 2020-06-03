@@ -35,13 +35,14 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
     bpiData.rate_float = 0;
     return; // nothing to do here
   }
+  WiFiClient client;
   HTTPClient http;
   
   String apiGetData = "http://" + String(servername) + "/v1/bpi/currentprice/" + currencyCode + ".json";
 
   Serial.println("Getting Bitcoin Data");
   Serial.println(apiGetData);
-  http.begin(apiGetData);
+  http.begin(client, apiGetData);
   int httpCode = http.GET();
 
   String result = "";

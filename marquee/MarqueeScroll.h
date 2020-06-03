@@ -14,7 +14,6 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h> // --> https://github.com/adafruit/Adafruit-GFX-Library
 #include <Max72xxPanel.h> // --> https://github.com/markruys/arduino-Max72xxPanel
-#include <pgmspace.h>
 #include <ArduinoJson.h>
 
 #include "OpenWeatherMapClient.h"
