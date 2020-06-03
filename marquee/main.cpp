@@ -35,7 +35,7 @@ void setup() {
   //New Line to clear from start garbage
   Serial.println();
 
-  readCityIds();
+  readConfigJson();
 
   Serial.println("*setup(): Number of LED Displays: " + String(numberOfHorizontalDisplays));
   // initialize dispaly
@@ -198,19 +198,19 @@ void loop() {
       String msg;
       msg += scrollSpacer;
 
-      if (SHOW_DATE) {
+      if (WEATHER_DATE) {
         msg += TimeDB.getDayName() + ", ";
         msg += TimeDB.getMonthName() + " " + day();
         msg += scrollSpacer;
       }
-      if (SHOW_CITY) {
+      if (WEATHER_CITY) {
         msg += weatherClient.getCity(0);
         msg += scrollSpacer;
       }
       msg += "Temp: " + temperature + getTempSymbol();
       msg += scrollSpacer;
 
-      if (SHOW_FEELSLIKE) {
+      if (WEATHER_FEELSLIKE) {
         String feels_like = weatherClient.getFeelsLikeRounded(0);
         msg += "Feels like: " + feels_like + getTempSymbol();
         msg += scrollSpacer;
@@ -218,29 +218,29 @@ void loop() {
         
 
       //show high/low temperature
-      if (SHOW_HIGHLOW) {
+      if (WEATHER_HIGHLOW) {
         msg += "Hi:" + weatherClient.getHigh(0) + getTempSymbol() + " / Lo:" + weatherClient.getLow(0) + " " + getTempSymbol();
         msg += scrollSpacer;
       }
       
-      if (SHOW_CONDITION) {
+      if (WEATHER_CONDITION) {
         msg += description + ". ";
       }
-      if (SHOW_HUMIDITY) {
+      if (WEATHER_HUMIDITY) {
         msg += "Humid: " + weatherClient.getHumidityRounded(0) + "%  ";
       }
-      if (SHOW_WIND) {
+      if (WEATHER_WIND) {
         msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " + weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
         msg += scrollSpacer;
       }
       //line to show barometric pressure
-      if (SHOW_PRESSURE) {
+      if (WEATHER_PRESSURE) {
         msg += "Pressure:" + weatherClient.getPressure(0) + getPressureSymbol();
         msg += scrollSpacer;
       }
 
-      if (!marqueeMessage.isEmpty()) {
-        msg += marqueeMessage;
+      if (!USER_MESSAGE.isEmpty()) {
+        msg += USER_MESSAGE;
         msg += scrollSpacer;
       }
       
@@ -338,7 +338,7 @@ void handleSaveBitcoin() {
     return server.requestAuthentication();
   }
   BitcoinCurrencyCode = server.arg("bitcoincurrency");
-  writeConfig();
+  writeConfigJson();
   bitcoinClient.updateBitcoinData(BitcoinCurrencyCode);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   redirectHome();
 }
@@ -349,7 +349,7 @@ void handleSaveWideClock() {
   }
   if (numberOfHorizontalDisplays >= 8) {
     Wide_Clock_Style = server.arg("wideclockformat");
-    writeConfig();
+    writeConfigJson();
     matrix.fillScreen(LOW); // show black
   }
   redirectHome();
@@ -363,7 +363,7 @@ void handleSaveNews() {
   NEWS_API_KEY = server.arg("newsApiKey");
   NEWS_SOURCE = server.arg("newssource");
   matrix.fillScreen(LOW); // show black
-  writeConfig();
+  writeConfigJson();
   newsClient.updateNews();
   redirectHome();
 }
@@ -380,7 +380,7 @@ void handleSaveOctoprint() {
   OctoAuthUser = server.arg("octoUser");
   OctoAuthPass = server.arg("octoPass");
   matrix.fillScreen(LOW); // show black
-  writeConfig();
+  writeConfigJson();
   if (OCTOPRINT_ENABLED) {
     printerClient.getPrinterJobResults();
   }
@@ -394,7 +394,7 @@ void handleSavePihole() {
   USE_PIHOLE = server.hasArg("displaypihole");
   PiHoleServer = server.arg("piholeAddress");
   PiHolePort = server.arg("piholePort").toInt();
-  writeConfig();
+  writeConfigJson();
   if (USE_PIHOLE) {
     piholeClient.getPiHoleData(PiHoleServer, PiHolePort);
     piholeClient.getGraphData(PiHoleServer, PiHolePort);
@@ -406,22 +406,22 @@ void handleLocations() {
   if (!athentication()) {
     return server.requestAuthentication();
   }
-  TIMEDBKEY = server.arg("TimeZoneDB");
-  APIKEY = server.arg("openWeatherMapApiKey");
+  TIMEDB_API_KEY = server.arg("TimeZoneDB");
+  WEATHER_API_KEY = server.arg("openWeatherMapApiKey");
   CityIDs[0] = server.arg("city1").toInt();
   flashOnSeconds = server.hasArg("flashseconds");
   IS_24HOUR = server.hasArg("is24hour");
   IS_PM = server.hasArg("isPM");
-  SHOW_FEELSLIKE = server.hasArg("showfeelslike");
-  SHOW_DATE = server.hasArg("showdate");
-  SHOW_CITY = server.hasArg("showcity");
-  SHOW_CONDITION = server.hasArg("showcondition");
-  SHOW_HUMIDITY = server.hasArg("showhumidity");
-  SHOW_WIND = server.hasArg("showwind");
-  SHOW_PRESSURE = server.hasArg("showpressure");
-  SHOW_HIGHLOW = server.hasArg("showhighlow");
+  WEATHER_FEELSLIKE = server.hasArg("showfeelslike");
+  WEATHER_DATE = server.hasArg("showdate");
+  WEATHER_CITY = server.hasArg("showcity");
+  WEATHER_CONDITION = server.hasArg("showcondition");
+  WEATHER_HUMIDITY = server.hasArg("showhumidity");
+  WEATHER_WIND = server.hasArg("showwind");
+  WEATHER_PRESSURE = server.hasArg("showpressure");
+  WEATHER_HIGHLOW = server.hasArg("showhighlow");
   IS_METRIC = server.hasArg("metric");
-  marqueeMessage = decodeHtmlString(server.arg("marqueeMsg"));
+  USER_MESSAGE = decodeHtmlString(server.arg("marqueeMsg"));
   timeDisplayTurnsOn = decodeHtmlString(server.arg("startTime"));
   timeDisplayTurnsOff = decodeHtmlString(server.arg("endTime"));
   displayIntensity = server.arg("ledintensity").toInt();
@@ -435,7 +435,7 @@ void handleLocations() {
   temp.toCharArray(www_password, sizeof(temp));
   weatherClient.setMetric(IS_METRIC);
   matrix.fillScreen(LOW); // show black
-  writeConfig();
+  writeConfigJson();
   getUpdatedData(); // this will force a data pull for new weather
   redirectHome();
 }
@@ -642,8 +642,8 @@ void handleConfigure() {
   sendHeader();
 
   String form = FPSTR(CHANGE_FORM1);
-  form.replace("%TIMEDBKEY%", TIMEDBKEY);
-  form.replace("%WEATHERKEY%", APIKEY);
+  form.replace("%TIMEDB_API_KEY%", TIMEDB_API_KEY);
+  form.replace("%WEATHERKEY%", WEATHER_API_KEY);
 
   String cityName = "";
   if (weatherClient.getCity(0) != "") {
@@ -653,49 +653,49 @@ void handleConfigure() {
   form.replace("%CITY1%", String(CityIDs[0]));
   
   String isFeelsLikeChecked = "";
-  if (SHOW_FEELSLIKE) {
+  if (WEATHER_FEELSLIKE) {
     isFeelsLikeChecked = "checked='checked'";
   }
   form.replace("%FEELSLIKE_CHECKED%", isFeelsLikeChecked);
   
   String isDateChecked = "";
-  if (SHOW_DATE) {
+  if (WEATHER_DATE) {
     isDateChecked = "checked='checked'";
   }
   form.replace("%DATE_CHECKED%", isDateChecked);
   
   String isCityChecked = "";
-  if (SHOW_CITY) {
+  if (WEATHER_CITY) {
     isCityChecked = "checked='checked'";
   }
   form.replace("%CITY_CHECKED%", isCityChecked);
   
   String isConditionChecked = "";
-  if (SHOW_CONDITION) {
+  if (WEATHER_CONDITION) {
     isConditionChecked = "checked='checked'";
   }
   form.replace("%CONDITION_CHECKED%", isConditionChecked);
   
   String isHumidityChecked = "";
-  if (SHOW_HUMIDITY) {
+  if (WEATHER_HUMIDITY) {
     isHumidityChecked = "checked='checked'";
   }
   form.replace("%HUMIDITY_CHECKED%", isHumidityChecked);
   
   String isWindChecked = "";
-  if (SHOW_WIND) {
+  if (WEATHER_WIND) {
     isWindChecked = "checked='checked'";
   }
   form.replace("%WIND_CHECKED%", isWindChecked);
   
   String isPressureChecked = "";
-  if (SHOW_PRESSURE) {
+  if (WEATHER_PRESSURE) {
     isPressureChecked = "checked='checked'";
   }
   form.replace("%PRESSURE_CHECKED%", isPressureChecked);
 
   String isHighlowChecked = "";
-  if (SHOW_HIGHLOW) {
+  if (WEATHER_HIGHLOW) {
     isHighlowChecked = "checked='checked'";
   }
   form.replace("%HIGHLOW_CHECKED%", isHighlowChecked);
@@ -724,7 +724,7 @@ void handleConfigure() {
     isFlashSecondsChecked = "checked='checked'";
   }
   form.replace("%FLASHSECONDS%", isFlashSecondsChecked);
-  form.replace("%MSG%", marqueeMessage);
+  form.replace("%MSG%", USER_MESSAGE);
   form.replace("%STARTTIME%", timeDisplayTurnsOn);
   form.replace("%ENDTIME%", timeDisplayTurnsOff);
   form.replace("%INTENSITYOPTIONS%", String(displayIntensity));
@@ -801,7 +801,7 @@ void getUpdatedData() //client function to send/receive GET request data.
   matrix.drawPixel(0, 2, HIGH);
   Serial.println("*GetUpdatedData(): Matrix Width:" + matrix.width());
   matrix.write();
-  TimeDB.updateConfig(TIMEDBKEY, weatherClient.getLat(0), weatherClient.getLon(0));
+  TimeDB.updateConfig(TIMEDB_API_KEY, weatherClient.getLat(0), weatherClient.getLon(0));
   time_t currentTime = TimeDB.getTime();
   if(currentTime > 5000 || firstEpoch == 0) {
     setTime(currentTime);
@@ -945,7 +945,7 @@ void displayWeatherData() {
   Serial.println(temperature);
   Serial.println(time);
 
-  if (TIMEDBKEY == "") {
+  if (TIMEDB_API_KEY == "") {
     html += "<p>Please <a href='/configure'>Configure TimeZoneDB</a> with API key.</p>";
   }
 
@@ -1172,269 +1172,130 @@ void checkDisplay() {
   }
 }
 
-String writeConfigJson() {
+bool writeConfigJson() {
+  const size_t capacity = 2048;
+  DynamicJsonDocument doc(capacity);
 
-}
+  doc["TIMEDB_API_KEY"] = TIMEDB_API_KEY;
+  doc["CITYID"] = String(CityIDs[0]);
+  doc["USER_MESSAGE"] = USER_MESSAGE;
+  doc["newsSource"] = NEWS_SOURCE;
+  doc["timeDisplayTurnsOn"] = timeDisplayTurnsOn;
+  doc["timeDisplayTurnsOff"] = timeDisplayTurnsOff;
+  doc["ledIntensity"] = String(displayIntensity);
+  doc["scrollSpeed"] = String(displayScrollSpeed);
+  doc["isNews"] = String(NEWS_ENABLED);
+  doc["newsApiKey"] = NEWS_API_KEY;
+  doc["isFlash"] = String(flashOnSeconds);
+  doc["is24hour"] = String(IS_24HOUR);
+  doc["isPM"] = String(IS_PM);
+  doc["wideclockformat"] = Wide_Clock_Style;
+  doc["isMetric"] = String(IS_METRIC);
+  doc["refreshRate"] = String(minutesBetweenDataRefresh);
+  doc["minutesBetweenScrolling"] = String(minutesBetweenScrolling);
+  doc["isOctoPrint"] = String(OCTOPRINT_ENABLED);
+  doc["isOctoProgress"] = String(OCTOPRINT_PROGRESS);
+  doc["octoKey"] = OctoPrintApiKey;
+  doc["octoServer"] = OctoPrintServer;
+  doc["octoPort"] = String(OctoPrintPort);
+  doc["octoUser"] = OctoAuthUser;
+  doc["octoPass"] = OctoAuthPass;
+  doc["www_username"] = String(www_username);
+  doc["www_password"] = String(www_password);
+  doc["IS_BASIC_AUTH"] = String(IS_BASIC_AUTH);
+  doc["BitcoinCurrencyCode"] = BitcoinCurrencyCode;
+  doc["WEATHER_API_KEY"] = WEATHER_API_KEY;
+  doc["WEATHER_CITY"] = String(WEATHER_CITY);
+  doc["WEATHER_CONDITION"] = String(WEATHER_CONDITION);
+  doc["WEATHER_HUMIDITY"] = String(WEATHER_HUMIDITY);
+  doc["WEATHER_WIND"] = String(WEATHER_WIND);
+  doc["WEATHER_PRESSURE"] = String(WEATHER_PRESSURE);
+  doc["WEATHER_HIGHLOW"] = String(WEATHER_HIGHLOW);
+  doc["WEATHER_FEELSLIKE"] = String(WEATHER_FEELSLIKE);
+  doc["WEATHER_DATE"] = String(WEATHER_DATE);
+  doc["USE_PIHOLE"] = String(USE_PIHOLE);
+  doc["PiHoleServer"] = PiHoleServer;
+  doc["PiHolePort"] = String(PiHolePort);
 
-String writeConfig() {
-  // Save decoded message to LittleFS file for playback on power up.
-  File f = LittleFS.open(CONFIG, "w");
-  if (!f) {
-    Serial.println("File open failed!");
-  } else {
-    Serial.println("Saving settings now...");
-    f.println("TIMEDBKEY=" + TIMEDBKEY);
-    f.println("APIKEY=" + APIKEY);
-    f.println("CityID=" + String(CityIDs[0]));
-    f.println("marqueeMessage=" + marqueeMessage);
-    f.println("newsSource=" + NEWS_SOURCE);
-    f.println("timeDisplayTurnsOn=" + timeDisplayTurnsOn);
-    f.println("timeDisplayTurnsOff=" + timeDisplayTurnsOff);
-    f.println("ledIntensity=" + String(displayIntensity));
-    f.println("scrollSpeed=" + String(displayScrollSpeed));
-    f.println("isNews=" + String(NEWS_ENABLED));
-    f.println("newsApiKey=" + NEWS_API_KEY);
-    f.println("isFlash=" + String(flashOnSeconds));
-    f.println("is24hour=" + String(IS_24HOUR));
-    f.println("isPM=" + String(IS_PM));
-    f.println("wideclockformat=" + Wide_Clock_Style);
-    f.println("isMetric=" + String(IS_METRIC));
-    f.println("refreshRate=" + String(minutesBetweenDataRefresh));
-    f.println("minutesBetweenScrolling=" + String(minutesBetweenScrolling));
-    f.println("isOctoPrint=" + String(OCTOPRINT_ENABLED));
-    f.println("isOctoProgress=" + String(OCTOPRINT_PROGRESS));
-    f.println("octoKey=" + OctoPrintApiKey);
-    f.println("octoServer=" + OctoPrintServer);
-    f.println("octoPort=" + String(OctoPrintPort));
-    f.println("octoUser=" + OctoAuthUser);
-    f.println("octoPass=" + OctoAuthPass);
-    f.println("www_username=" + String(www_username));
-    f.println("www_password=" + String(www_password));
-    f.println("IS_BASIC_AUTH=" + String(IS_BASIC_AUTH));
-    f.println("BitcoinCurrencyCode=" + BitcoinCurrencyCode);
-    f.println("SHOW_CITY=" + String(SHOW_CITY));
-    f.println("SHOW_CONDITION=" + String(SHOW_CONDITION));
-    f.println("SHOW_HUMIDITY=" + String(SHOW_HUMIDITY));
-    f.println("SHOW_WIND=" + String(SHOW_WIND));
-    f.println("SHOW_PRESSURE=" + String(SHOW_PRESSURE));
-    f.println("SHOW_HIGHLOW=" + String(SHOW_HIGHLOW));
-    f.println("SHOW_FEELSLIKE=" + String(SHOW_FEELSLIKE));
-    f.println("SHOW_DATE=" + String(SHOW_DATE));
-    f.println("USE_PIHOLE=" + String(USE_PIHOLE));
-    f.println("PiHoleServer=" + PiHoleServer);
-    f.println("PiHolePort=" + String(PiHolePort));
+  File configFile = LittleFS.open(CONFIG_JSON, "w");
+  if (!configFile) {
+    Serial.println("Failed to open config file for writing");
+    return false;
   }
-  f.close();
-  readCityIds();
-  weatherClient.updateCityIdList(CityIDs, 1);
-  String cityIds = weatherClient.getMyCityIDs();
-  return cityIds;
+
+  serializeJson(doc, configFile);
+  configFile.close();
+  serializeJsonPretty(doc, Serial);
+  Serial.println();
+  return true;
 }
 
-void readCityIds() {
-  if (LittleFS.exists(CONFIG) == false) {
+bool readConfigJson() {
+  if (LittleFS.exists(CONFIG_JSON) == false) {
     Serial.println("Settings File does not yet exists.");
-    writeConfig();
-    return;
+    writeConfigJson();
   }
-  File fr = LittleFS.open(CONFIG, "r");
-  String line;
-  while (fr.available()) {
-    line = fr.readStringUntil('\n');
-    if (line.indexOf("TIMEDBKEY=") >= 0) {
-      TIMEDBKEY = line.substring(line.lastIndexOf("TIMEDBKEY=") + 10);
-      TIMEDBKEY.trim();
-      Serial.println("TIMEDBKEY: " + TIMEDBKEY);
-    }
-    if (line.indexOf("APIKEY=") >= 0) {
-      APIKEY = line.substring(line.lastIndexOf("APIKEY=") + 7);
-      APIKEY.trim();
-      Serial.println("APIKEY: " + APIKEY);
-    }
-    if (line.indexOf("CityID=") >= 0) {
-      CityIDs[0] = line.substring(line.lastIndexOf("CityID=") + 7).toInt();
-      Serial.println("CityID: " + String(CityIDs[0]));
-    }
-    if (line.indexOf("newsSource=") >= 0) {
-      NEWS_SOURCE = line.substring(line.lastIndexOf("newsSource=") + 11);
-      NEWS_SOURCE.trim();
-      Serial.println("newsSource=" + NEWS_SOURCE);
-    }
-    if (line.indexOf("isNews=") >= 0) {
-      NEWS_ENABLED = line.substring(line.lastIndexOf("isNews=") + 7).toInt();
-      Serial.println("NEWS_ENABLED=" + String(NEWS_ENABLED));
-    }
-    if (line.indexOf("newsApiKey=") >= 0) {
-      NEWS_API_KEY = line.substring(line.lastIndexOf("newsApiKey=") + 11);
-      NEWS_API_KEY.trim();
-      Serial.println("NEWS_API_KEY: " + NEWS_API_KEY);
-    }
-    if (line.indexOf("isFlash=") >= 0) {
-      flashOnSeconds = line.substring(line.lastIndexOf("isFlash=") + 8).toInt();
-      Serial.println("flashOnSeconds=" + String(flashOnSeconds));
-    }
-    if (line.indexOf("is24hour=") >= 0) {
-      IS_24HOUR = line.substring(line.lastIndexOf("is24hour=") + 9).toInt();
-      Serial.println("IS_24HOUR=" + String(IS_24HOUR));
-    }
-    if (line.indexOf("isPM=") >= 0) {
-      IS_PM = line.substring(line.lastIndexOf("isPM=") + 5).toInt();
-      Serial.println("IS_PM=" + String(IS_PM));
-    }
-    if (line.indexOf("wideclockformat=") >= 0) {
-      Wide_Clock_Style = line.substring(line.lastIndexOf("wideclockformat=") + 16);
-      Wide_Clock_Style.trim();
-      Serial.println("Wide_Clock_Style=" + Wide_Clock_Style);
-    }
-    if (line.indexOf("isMetric=") >= 0) {
-      IS_METRIC = line.substring(line.lastIndexOf("isMetric=") + 9).toInt();
-      Serial.println("IS_METRIC=" + String(IS_METRIC));
-    }
-    if (line.indexOf("refreshRate=") >= 0) {
-      minutesBetweenDataRefresh = line.substring(line.lastIndexOf("refreshRate=") + 12).toInt();
-      if (minutesBetweenDataRefresh == 0) {
-        minutesBetweenDataRefresh = 15; // can't be zero
-      }
-      Serial.println("minutesBetweenDataRefresh=" + String(minutesBetweenDataRefresh));
-    }
-    if (line.indexOf("minutesBetweenScrolling=") >= 0) {
-      displayRefreshCount = 1;
-      minutesBetweenScrolling = line.substring(line.lastIndexOf("minutesBetweenScrolling=") + 24).toInt();
-      Serial.println("minutesBetweenScrolling=" + String(minutesBetweenScrolling));
-    }
-    if (line.indexOf("marqueeMessage=") >= 0) {
-      marqueeMessage = line.substring(line.lastIndexOf("marqueeMessage=") + 15);
-      marqueeMessage.trim();
-      Serial.println("marqueeMessage=" + marqueeMessage);
-    }
-    if (line.indexOf("timeDisplayTurnsOn=") >= 0) {
-      timeDisplayTurnsOn = line.substring(line.lastIndexOf("timeDisplayTurnsOn=") + 19);
-      timeDisplayTurnsOn.trim();
-      Serial.println("timeDisplayTurnsOn=" + timeDisplayTurnsOn);
-    }
-    if (line.indexOf("timeDisplayTurnsOff=") >= 0) {
-      timeDisplayTurnsOff = line.substring(line.lastIndexOf("timeDisplayTurnsOff=") + 20);
-      timeDisplayTurnsOff.trim();
-      Serial.println("timeDisplayTurnsOff=" + timeDisplayTurnsOff);
-    }
-    if (line.indexOf("ledIntensity=") >= 0) {
-      displayIntensity = line.substring(line.lastIndexOf("ledIntensity=") + 13).toInt();
-      Serial.println("displayIntensity=" + String(displayIntensity));
-    }
-    if (line.indexOf("scrollSpeed=") >= 0) {
-      displayScrollSpeed = line.substring(line.lastIndexOf("scrollSpeed=") + 12).toInt();
-      Serial.println("displayScrollSpeed=" + String(displayScrollSpeed));
-    }
-    if (line.indexOf("isOctoPrint=") >= 0) {
-      OCTOPRINT_ENABLED = line.substring(line.lastIndexOf("isOctoPrint=") + 12).toInt();
-      Serial.println("OCTOPRINT_ENABLED=" + String(OCTOPRINT_ENABLED));
-    }
-    if (line.indexOf("isOctoProgress=") >= 0) {
-      OCTOPRINT_PROGRESS = line.substring(line.lastIndexOf("isOctoProgress=") + 15).toInt();
-      Serial.println("OCTOPRINT_PROGRESS=" + String(OCTOPRINT_PROGRESS));
-    }
-    if (line.indexOf("octoKey=") >= 0) {
-      OctoPrintApiKey = line.substring(line.lastIndexOf("octoKey=") + 8);
-      OctoPrintApiKey.trim();
-      Serial.println("OctoPrintApiKey=" + OctoPrintApiKey);
-    }
-    if (line.indexOf("octoServer=") >= 0) {
-      OctoPrintServer = line.substring(line.lastIndexOf("octoServer=") + 11);
-      OctoPrintServer.trim();
-      Serial.println("OctoPrintServer=" + OctoPrintServer);
-    }
-    if (line.indexOf("octoPort=") >= 0) {
-      OctoPrintPort = line.substring(line.lastIndexOf("octoPort=") + 9).toInt();
-      Serial.println("OctoPrintPort=" + String(OctoPrintPort));
-    }
-    if (line.indexOf("octoUser=") >= 0) {
-      OctoAuthUser = line.substring(line.lastIndexOf("octoUser=") + 9);
-      OctoAuthUser.trim();
-      Serial.println("OctoAuthUser=" + OctoAuthUser);
-    }
-    if (line.indexOf("octoPass=") >= 0) {
-      OctoAuthPass = line.substring(line.lastIndexOf("octoPass=") + 9);
-      OctoAuthPass.trim();
-      Serial.println("OctoAuthPass=" + OctoAuthPass);
-    }
-    if (line.indexOf("www_username=") >= 0) {
-      String temp = line.substring(line.lastIndexOf("www_username=") + 13);
-      temp.trim();
-      temp.toCharArray(www_username, sizeof(temp));
-      Serial.println("www_username=" + String(www_username));
-    }
-    if (line.indexOf("www_password=") >= 0) {
-      String temp = line.substring(line.lastIndexOf("www_password=") + 13);
-      temp.trim();
-      temp.toCharArray(www_password, sizeof(temp));
-      Serial.println("www_password=" + String(www_password));
-    }
-    if (line.indexOf("IS_BASIC_AUTH=") >= 0) {
-      IS_BASIC_AUTH = line.substring(line.lastIndexOf("IS_BASIC_AUTH=") + 14).toInt();
-      Serial.println("IS_BASIC_AUTH=" + String(IS_BASIC_AUTH));
-    }
-    if (line.indexOf("BitcoinCurrencyCode=") >= 0) {
-      BitcoinCurrencyCode = line.substring(line.lastIndexOf("BitcoinCurrencyCode=") + 20);
-      BitcoinCurrencyCode.trim();
-      Serial.println("BitcoinCurrencyCode=" + BitcoinCurrencyCode);
-    }
-    if (line.indexOf("SHOW_CITY=") >= 0) {
-      SHOW_CITY = line.substring(line.lastIndexOf("SHOW_CITY=") + 10).toInt();
-      Serial.println("SHOW_CITY=" + String(SHOW_CITY));
-    }
-    if (line.indexOf("SHOW_CONDITION=") >= 0) {
-      SHOW_CONDITION = line.substring(line.lastIndexOf("SHOW_CONDITION=") + 15).toInt();
-      Serial.println("SHOW_CONDITION=" + String(SHOW_CONDITION));
-    }
-    if (line.indexOf("SHOW_HUMIDITY=") >= 0) {
-      SHOW_HUMIDITY = line.substring(line.lastIndexOf("SHOW_HUMIDITY=") + 14).toInt();
-      Serial.println("SHOW_HUMIDITY=" + String(SHOW_HUMIDITY));
-    }
-    if (line.indexOf("SHOW_WIND=") >= 0) {
-      SHOW_WIND = line.substring(line.lastIndexOf("SHOW_WIND=") + 10).toInt();
-      Serial.println("SHOW_WIND=" + String(SHOW_WIND));
-    }
-    if (line.indexOf("SHOW_PRESSURE=") >= 0) {
-      SHOW_PRESSURE = line.substring(line.lastIndexOf("SHOW_PRESSURE=") + 14).toInt();
-      Serial.println("SHOW_PRESSURE=" + String(SHOW_PRESSURE));
-    }
+  File f = LittleFS.open(CONFIG_JSON, "r");
+  
+  const size_t capacity = 2048;
+  DynamicJsonDocument doc(capacity);
 
-    if (line.indexOf("SHOW_HIGHLOW=") >= 0) {
-      SHOW_HIGHLOW = line.substring(line.lastIndexOf("SHOW_HIGHLOW=") + 13).toInt();
-      Serial.println("SHOW_HIGHLOW=" + String(SHOW_HIGHLOW));
-    }
-    
-    if (line.indexOf("SHOW_FEELSLIKE=") >= 0) {
-      SHOW_FEELSLIKE = line.substring(line.lastIndexOf("SHOW_FEELSLIKE=") + 15).toInt();
-      Serial.println("SHOW_FEELSLIKE=" + String(SHOW_FEELSLIKE));
-    }
-    
-    if (line.indexOf("SHOW_DATE=") >= 0) {
-      SHOW_DATE = line.substring(line.lastIndexOf("SHOW_DATE=") + 10).toInt();
-      Serial.println("SHOW_DATE=" + String(SHOW_DATE));
-    }
+  DeserializationError error = deserializeJson(doc, f);
+  if (error)
+    Serial.println(F("Failed to read JSON file"));
+  
+  serializeJsonPretty(doc, Serial);
+  Serial.println();
+  f.close();
 
-    if (line.indexOf("USE_PIHOLE=") >= 0) {
-      USE_PIHOLE = line.substring(line.lastIndexOf("USE_PIHOLE=") + 11).toInt();
-      Serial.println("USE_PIHOLE=" + String(USE_PIHOLE));
-    }
-    if (line.indexOf("PiHoleServer=") >= 0) {
-      PiHoleServer = line.substring(line.lastIndexOf("PiHoleServer=") + 13);
-      PiHoleServer.trim();
-      Serial.println("PiHoleServer=" + PiHoleServer);
-    }
-    if (line.indexOf("PiHolePort=") >= 0) {
-      PiHolePort = line.substring(line.lastIndexOf("PiHolePort=") + 11).toInt();
-      Serial.println("PiHolePort=" + String(PiHolePort));
-    }
-  }
-  fr.close();
+  TIMEDB_API_KEY = (const char*)doc["TIMEDB_API_KEY"]; 
+  CityIDs[0] = (int)doc["CITYID"]; 
+  USER_MESSAGE = (const char*)doc["USER_MESSAGE"]; 
+  NEWS_SOURCE = (const char*)doc["newsSource"]; 
+  timeDisplayTurnsOn = (const char*)doc["timeDisplayTurnsOn"]; 
+  timeDisplayTurnsOff = (const char*)doc["timeDisplayTurnsOff"]; 
+  displayIntensity = (int)doc["ledIntensity"]; 
+  displayScrollSpeed = (int)doc["scrollSpeed"]; 
+  NEWS_ENABLED = (boolean)doc["isNews"]; 
+  NEWS_API_KEY = (const char*)doc["newsApiKey"]; 
+  flashOnSeconds = (boolean)doc["isFlash"]; 
+  IS_24HOUR = (boolean)doc["is24hour"]; 
+  IS_PM = (boolean)doc["isPM"]; 
+  Wide_Clock_Style = (const char*)doc["wideclockformat"]; 
+  IS_METRIC = (boolean)doc["isMetric"]; 
+  minutesBetweenDataRefresh = (int)doc["refreshRate"]; 
+  minutesBetweenScrolling = (int)doc["minutesBetweenScrolling"]; 
+  OCTOPRINT_ENABLED = (boolean)doc["isOctoPrint"]; 
+  OCTOPRINT_PROGRESS = (boolean)doc["isOctoProgress"]; 
+  OctoPrintApiKey = (const char*)doc["octoKey"]; 
+  OctoPrintServer = (const char*)doc["octoServer"]; 
+  OctoPrintPort = (int)doc["octoPort"]; 
+  OctoAuthUser = (const char*)doc["octoUser"]; 
+  OctoAuthPass = (const char*)doc["octoPass"]; 
+  // www_username = doc["www_username"]; 
+  // www_password = doc["www_password"]; 
+  IS_BASIC_AUTH = (boolean)doc["IS_BASIC_AUTH"]; 
+  BitcoinCurrencyCode = (const char*)doc["BitcoinCurrencyCode"]; 
+  WEATHER_API_KEY = (const char*)doc["WEATHER_API_KEY"]; 
+  WEATHER_CITY = (boolean)doc["WEATHER_CITY"]; 
+  WEATHER_CONDITION = (boolean)doc["WEATHER_CONDITION"]; 
+  WEATHER_HUMIDITY = (boolean)doc["WEATHER_HUMIDITY"]; 
+  WEATHER_WIND = (boolean)doc["WEATHER_WIND"]; 
+  WEATHER_PRESSURE = (boolean)doc["WEATHER_PRESSURE"]; 
+  WEATHER_HIGHLOW = (boolean)doc["WEATHER_HIGHLOW"]; 
+  WEATHER_FEELSLIKE = (boolean)doc["WEATHER_FEELSLIKE"]; 
+  WEATHER_DATE = (boolean)doc["WEATHER_DATE"]; 
+  USE_PIHOLE = (boolean)doc["USE_PIHOLE"]; 
+  PiHoleServer = (const char*)doc["PiHoleServer"]; 
+  PiHolePort = (int)doc["PiHolePort"]; 
+
   matrix.setIntensity(displayIntensity);
   newsClient.updateNewsClient(NEWS_API_KEY, NEWS_SOURCE);
-  weatherClient.updateWeatherApiKey(APIKEY);
+  weatherClient.updateWeatherApiKey(WEATHER_API_KEY);
   weatherClient.setMetric(IS_METRIC);
   weatherClient.updateCityIdList(CityIDs, 1);
   printerClient.updateOctoPrintClient(OctoPrintApiKey, OctoPrintServer, OctoPrintPort, OctoAuthUser, OctoAuthPass);
+  return true;
 }
 
 void scrollMessage(String msg) {

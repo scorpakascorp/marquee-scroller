@@ -45,13 +45,13 @@ SOFTWARE.
 
 #define HOSTNAME "CLOCK-"
 #define CONFIG "/conf.txt"
+#define CONFIG_JSON "/conf.json"
 #define BUZZER_PIN  D2
 
-String TIMEDBKEY = ""; // Your API Key from https://timezonedb.com/register
-String APIKEY = ""; // Your API Key from http://openweathermap.org/
+String TIMEDB_API_KEY = ""; // Your API Key from https://timezonedb.com/register
 // Default City Location (use http://openweathermap.org/find to find city ID)
 int CityIDs[] = { 709930 }; //Only USE ONE for weather marquee
-String marqueeMessage = "";
+String USER_MESSAGE = "";
 boolean IS_METRIC = true; // false = Imperial and true = Metric
 boolean IS_24HOUR = true; // 23:00 millitary 24 hour clock
 boolean IS_PM = false; // Show PM indicator on Clock when in AM/PM mode
@@ -68,6 +68,18 @@ boolean flashOnSeconds = true; // when true the : character in the time will fla
 boolean NEWS_ENABLED = true;
 String NEWS_API_KEY = ""; // Get your News API Key from https://newsapi.org
 String NEWS_SOURCE = "rte";  // https://newsapi.org/sources to get full list of news sources available
+
+// (some) Default Weather Settings
+String WEATHER_API_KEY = ""; // Your API Key from http://openweathermap.org/
+boolean WEATHER_FEELSLIKE = true;
+boolean WEATHER_DATE = true;
+boolean WEATHER_CITY = false;
+boolean WEATHER_CONDITION = true;
+boolean WEATHER_HUMIDITY = true;
+boolean WEATHER_WIND = true;
+boolean WEATHER_WINDDIR = true;
+boolean WEATHER_PRESSURE = false;
+boolean WEATHER_HIGHLOW = false;
 
 // Display Settings
 // CLK -> D5 (SCK)  

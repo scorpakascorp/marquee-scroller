@@ -13,9 +13,6 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h> // --> https://github.com/adafruit/Adafruit-GFX-Library
-// #include "SansSerif_plain_8.h"
-// #include "DejaVu_Sans_Mono_8.h"
-// #include <fonts/TomThumb.h>
 #include <Max72xxPanel.h> // --> https://github.com/markruys/arduino-Max72xxPanel
 #include <pgmspace.h>
 #include <ArduinoJson.h>
@@ -65,15 +62,13 @@ void handleSystemReset();
 void handleSystemReset();
 void handleWideClockConfigure();
 String hourMinutes(boolean isRefresh);
-void readCityIds();
 void redirectHome();
 void scrollMessage(String msg);
 String secondsIndicator(boolean isRefresh);
 void sendFooter();
 void sendHeader();
-String writeConfig();
-
-
+bool writeConfigJson();
+bool readConfigJson();
 
 //declairing prototypes
 void configModeCallback (WiFiManager *myWiFiManager);
@@ -104,17 +99,8 @@ NewsApiClient newsClient(NEWS_API_KEY, NEWS_SOURCE);
 int newsIndex = 0;
 
 // Weather Client
-OpenWeatherMapClient weatherClient(APIKEY, CityIDs, 1, IS_METRIC);
-// (some) Default Weather Settings
-boolean SHOW_FEELSLIKE = true;
-boolean SHOW_DATE = true;
-boolean SHOW_CITY = false;
-boolean SHOW_CONDITION = true;
-boolean SHOW_HUMIDITY = true;
-boolean SHOW_WIND = true;
-boolean SHOW_WINDDIR = true;
-boolean SHOW_PRESSURE = false;
-boolean SHOW_HIGHLOW = false;
+OpenWeatherMapClient weatherClient(WEATHER_API_KEY, CityIDs, 1, IS_METRIC);
+
 
 // OctoPrint Client
 OctoPrintClient printerClient(OctoPrintApiKey, OctoPrintServer, OctoPrintPort, OctoAuthUser, OctoAuthPass);
@@ -153,7 +139,7 @@ static const char WEB_ACTION3[] PROGMEM = R"=====(
 static const char CHANGE_FORM1[] PROGMEM = R"=====(
   <form class='w3-container' action='/locations' method='get'><h2>Configure:</h2>
   <label>TimeZone DB API Key (get from <a href='https://timezonedb.com/register' target='_BLANK'>here</a>)</label>
-  <input class='w3-input w3-border w3-margin-bottom' type='text' name='TimeZoneDB' value='%TIMEDBKEY%' maxlength='60'>
+  <input class='w3-input w3-border w3-margin-bottom' type='text' name='TimeZoneDB' value='%TIMEDB_API_KEY%' maxlength='60'>
   <label>OpenWeatherMap API Key (get from <a href='https://openweathermap.org/' target='_BLANK'>here</a>)</label>
   <input class='w3-input w3-border w3-margin-bottom' type='text' name='openWeatherMapApiKey' value='%WEATHERKEY%' maxlength='70'>
   <p><label>%CITYNAME1% (<a href='http://openweathermap.org/find' target='_BLANK'><i class='fas fa-search'></i> Search for City ID</a>)</label>
