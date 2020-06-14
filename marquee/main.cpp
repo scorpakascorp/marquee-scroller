@@ -126,7 +126,8 @@ void setup() {
   if (WEBSERVER_ENABLED) {
     server.on("/", displayWeatherData);
     server.on("/pull", handlePull);
-    server.on("/locations", handleLocations);
+    server.on("/getjson", handleGetJson);
+    server.on("/savemain", handleSaveMain);
     server.on("/savebitcoin", handleSaveBitcoin);
     server.on("/savewideclock", handleSaveWideClock);
     server.on("/savenews", handleSaveNews);
@@ -257,7 +258,7 @@ void loop() {
         msg += "(" + printerClient.getProgressCompletion() + "%)";
         msg += scrollSpacer;
       }
-      if (BitcoinCurrencyCode != "NONE" && BitcoinCurrencyCode != "") {
+      if (BC_CODE != "NONE" && BC_CODE != "") {
         msg += "Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode();
         msg += scrollSpacer;;
       }
@@ -315,7 +316,7 @@ String hourMinutes(boolean isRefresh) {
 
 String secondsIndicator(boolean isRefresh) {
   String rtnValue = ":";
-  if (isRefresh == false && (flashOnSeconds && (second() % 2) == 0)) {
+  if (isRefresh == false && (IS_DOTS_BLINKING && (second() % 2) == 0)) {
     rtnValue = " ";
   }
   return rtnValue;
@@ -337,9 +338,9 @@ void handleSaveBitcoin() {
   if (!athentication()) {
     return server.requestAuthentication();
   }
-  BitcoinCurrencyCode = server.arg("bitcoincurrency");
+  BC_CODE = server.arg("bitcoincurrency");
   writeConfigJson();
-  bitcoinClient.updateBitcoinData(BitcoinCurrencyCode);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
+  bitcoinClient.updateBitcoinData(BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   redirectHome();
 }
 
@@ -367,6 +368,20 @@ void handleSaveNews() {
   newsClient.updateNews();
   redirectHome();
 }
+
+void handleGetJson() {
+  String json = "";
+  serializeJson(doc, json);
+  server.sendHeader("Cache-Control", "no-cache, no-store");
+  server.sendHeader("Pragma", "no-cache");
+  server.sendHeader("Expires", "-1");
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, "application/json", "");
+  server.sendContent(json);
+  server.sendContent("");
+  server.client().stop();
+}
+  
 
 void handleSaveOctoprint() {
   if (!athentication()) {
@@ -402,16 +417,16 @@ void handleSavePihole() {
   redirectHome();
 }
 
-void handleLocations() {
+void handleSaveMain() {
   if (!athentication()) {
     return server.requestAuthentication();
   }
-  TIMEDB_API_KEY = server.arg("TimeZoneDB");
-  WEATHER_API_KEY = server.arg("openWeatherMapApiKey");
+  TIMEDB_API_KEY = server.arg("TIMEDB_API_KEY");
+  WEATHER_API_KEY = server.arg("WEATHER_API_KEY");
   CityIDs[0] = server.arg("city1").toInt();
-  flashOnSeconds = server.hasArg("flashseconds");
-  IS_24HOUR = server.hasArg("is24hour");
-  IS_PM = server.hasArg("isPM");
+  IS_DOTS_BLINKING = server.hasArg("flashseconds");
+  IS_24HOUR = server.hasArg("IS_24HOUR");
+  IS_PM = server.hasArg("IS_PM");
   WEATHER_FEELSLIKE = server.hasArg("showfeelslike");
   WEATHER_DATE = server.hasArg("showdate");
   WEATHER_CITY = server.hasArg("showcity");
@@ -427,12 +442,8 @@ void handleLocations() {
   LED_BRIGHTNESS = server.arg("LED_BRIGHTNESS").toInt();
   minutesBetweenDataRefresh = server.arg("refresh").toInt();
   minutesBetweenScrolling = server.arg("refreshDisplay").toInt();
-  displayScrollSpeed = server.arg("scrollspeed").toInt();
+  SCROLLING_SPEED = server.arg("SCROLLING_SPEED").toInt();
   WEB_INTERFACE_AUTH_ENABLED = server.hasArg("isBasicAuth");
-  // String temp = server.arg("userid");
-  // temp.toCharArray(WEB_INTERFACE_USER, sizeof(temp));
-  // temp = server.arg("stationpassword");
-  // temp.toCharArray(WEB_INTERFACE_PASS, sizeof(temp));
   WEB_INTERFACE_USER = server.arg("userid");
   WEB_INTERFACE_PASS = server.arg("stationpassword");
   weatherClient.setMetric(IS_METRIC);
@@ -482,7 +493,7 @@ void handleBitcoinConfigure() {
 
   String form = FPSTR(BITCOIN_FORM);
   String bitcoinOptions = FPSTR(CURRENCY_OPTIONS);
-  bitcoinOptions.replace(BitcoinCurrencyCode + "'", BitcoinCurrencyCode + "' selected");
+  bitcoinOptions.replace(BC_CODE + "'", BC_CODE + "' selected");
   form.replace("%BITCOINOPTIONS%", bitcoinOptions);
   server.sendContent(form); //Send another Chunk of form
 
@@ -722,7 +733,7 @@ void handleConfigure() {
   }
   form.replace("%IS_PM_CHECKED%", isPmChecked);
   String isFlashSecondsChecked = "";
-  if (flashOnSeconds) {
+  if (IS_DOTS_BLINKING) {
     isFlashSecondsChecked = "checked='checked'";
   }
   form.replace("%FLASHSECONDS%", isFlashSecondsChecked);
@@ -730,10 +741,10 @@ void handleConfigure() {
   form.replace("%TIME_TO_DISPLAY_ON%", TIME_TO_DISPLAY_ON);
   form.replace("%TIME_TO_DISPLAY_OFF%", TIME_TO_DISPLAY_OFF);
   form.replace("%LED_BRIGHTNESS%", String(LED_BRIGHTNESS));
-  String dSpeed = String(displayScrollSpeed);
+  String dSpeed = String(SCROLLING_SPEED);
   String scrollOptions = "<option value='35'>Slow</option><option value='25'>Normal</option><option value='15'>Fast</option><option value='10'>Very Fast</option>";
   scrollOptions.replace(dSpeed + "'", dSpeed + "' selected" );
-  form.replace("%SCROLLOPTIONS%", scrollOptions);
+  form.replace("%SCROLLING_SPEED%", scrollOptions);
   String minutes = String(minutesBetweenDataRefresh);
   String options = "<option>5</option><option>10</option><option>15</option><option>20</option><option>30</option><option>60</option>";
   options.replace(">" + minutes + "<", " selected>" + minutes + "<");
@@ -826,7 +837,7 @@ void getUpdatedData() //client function to send/receive GET request data.
   }
 
   if (displayOn) {
-    bitcoinClient.updateBitcoinData(BitcoinCurrencyCode);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
+    bitcoinClient.updateBitcoinData(BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   }
 
   Serial.println("*GetUpdatedData(): Version: " + String(VERSION));
@@ -864,12 +875,13 @@ void redirectHome() {
 
 void sendHeader() {
   String html = "<!DOCTYPE HTML>";
-  html += "<html><head><title>Marquee Scroller</title><link rel='icon' href='data:;base64,='>";
+  html += "<html><head><title>Marquee Scroller</title>";
   html += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
   html += "<link rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css'>";
   html += "<link rel='stylesheet' href='https://www.w3schools.com/lib/w3-theme-blue-grey.css'>";
   html += "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.1/css/all.min.css'>";
+  html += "<link href='data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAHjH8AP///wBI1FYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzMwAAABERAAMwAAAAARADAAAwAAAAABMwAzAAAAABEzADMCIAAAETAAAwIgAAABADMAAAAAEQADMzAAAAEREAAzAAAAABEAMAADAiAQAAEzADMCIBEAETMAMwAAEQARMwAzAAARABEwAAMAABAAAQAzAAAAABEAAzMwAAABERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' rel='icon' type='image/x-icon' />";
   html += "</head><body>";
   server.sendContent(html);
   html = "<nav class='w3-sidebar w3-bar-block w3-card' style='margin-top:88px' id='mySidebar'>";
@@ -948,7 +960,7 @@ void displayWeatherData() {
   Serial.println(time);
 
   if (TIMEDB_API_KEY == "") {
-    html += "<p>Please <a href='/configure'>Configure TimeZoneDB</a> with API key.</p>";
+    html += "<p>Please <a href='/configure'>Configure TimeZone</a> API</p>";
   }
 
   if (weatherClient.getCity(0) == "") {
@@ -995,7 +1007,7 @@ void displayWeatherData() {
     html = "";
   }
 
-  if (BitcoinCurrencyCode != "NONE" && BitcoinCurrencyCode != "") {
+  if (BC_CODE != "NONE" && BC_CODE != "") {
     html = "<div class='w3-cell-row'>Bitcoin value: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode() + "</div><br><hr>";
     server.sendContent(String(html));
     html = "";
@@ -1175,23 +1187,23 @@ void checkDisplay() {
 }
 
 bool writeConfigJson() {
-  const size_t capacity = 2048;
-  DynamicJsonDocument doc(capacity);
+  // const size_t capacity = 2048;
+  // DynamicJsonDocument doc(capacity);
 
   doc["TIMEDB_API_KEY"] = TIMEDB_API_KEY;
   doc["USER_MESSAGE"] = USER_MESSAGE;
   doc["TIME_TO_DISPLAY_ON"] = TIME_TO_DISPLAY_ON;
   doc["TIME_TO_DISPLAY_OFF"] = TIME_TO_DISPLAY_OFF;
   doc["ledIntensity"] = LED_BRIGHTNESS;
-  doc["scrollSpeed"] = displayScrollSpeed;
+  doc["scrollSpeed"] = SCROLLING_SPEED;
 
   doc["NEWS"]["ENABLED"] = NEWS_ENABLED;
   doc["NEWS"]["API_KEY"] = NEWS_API_KEY;
   doc["NEWS"]["SOURCE"] = NEWS_SOURCE;
 
-  doc["isFlash"] = flashOnSeconds;
-  doc["is24hour"] = IS_24HOUR;
-  doc["isPM"] = IS_PM;
+  doc["IS_DOTS_BLINKING"] = IS_DOTS_BLINKING;
+  doc["IS_24HOUR"] = IS_24HOUR;
+  doc["IS_PM"] = IS_PM;
   doc["wideclockformat"] = Wide_Clock_Style;
   doc["isMetric"] = IS_METRIC;
   doc["refreshRate"] = minutesBetweenDataRefresh;
@@ -1209,7 +1221,7 @@ bool writeConfigJson() {
   doc["WEB_INTERFACE"]["USER"] = WEB_INTERFACE_USER;
   doc["WEB_INTERFACE"]["PASS"] = WEB_INTERFACE_PASS;
 
-  doc["BitcoinCurrencyCode"] = BitcoinCurrencyCode;
+  doc["BC_CODE"] = BC_CODE;
 
   doc["WEATHER"]["API_KEY"] = WEATHER_API_KEY;
   doc["WEATHER"]["CITY_ID"] = CityIDs[0];
@@ -1251,8 +1263,8 @@ bool readConfigJson() {
   }
   File f = LittleFS.open(CONFIG_JSON, "r");
   
-  const size_t capacity = 2048;
-  DynamicJsonDocument doc(capacity);
+  // const size_t capacity = 2048;
+  // DynamicJsonDocument doc(capacity);
 
   DeserializationError error = deserializeJson(doc, f);
   if (error)
@@ -1268,15 +1280,15 @@ bool readConfigJson() {
   TIME_TO_DISPLAY_ON = (const char*)doc["TIME_TO_DISPLAY_ON"]; 
   TIME_TO_DISPLAY_OFF = (const char*)doc["TIME_TO_DISPLAY_OFF"]; 
   LED_BRIGHTNESS = doc["ledIntensity"]; 
-  displayScrollSpeed = doc["scrollSpeed"]; 
+  SCROLLING_SPEED = doc["scrollSpeed"]; 
   
   NEWS_ENABLED = doc["NEWS"]["ENABLED"]; 
   NEWS_API_KEY = (const char*)doc["NEWS"]["API_KEY"];
   NEWS_SOURCE = (const char*)doc["NEWS"]["SOURCE"]; 
 
-  flashOnSeconds = doc["isFlash"]; 
-  IS_24HOUR = doc["is24hour"]; 
-  IS_PM = doc["isPM"]; 
+  IS_DOTS_BLINKING = doc["IS_DOTS_BLINKING"]; 
+  IS_24HOUR = doc["IS_24HOUR"]; 
+  IS_PM = doc["IS_PM"]; 
   Wide_Clock_Style = (const char*)doc["wideclockformat"]; 
   IS_METRIC = doc["isMetric"]; 
   minutesBetweenDataRefresh = doc["refreshRate"]; 
@@ -1294,7 +1306,7 @@ bool readConfigJson() {
   WEB_INTERFACE_USER = (const char*)doc["WEB_INTERFACE"]["USER"]; 
   WEB_INTERFACE_PASS = (const char*)doc["WEB_INTERFACE"]["PASS"]; 
 
-  BitcoinCurrencyCode = (const char*)doc["BitcoinCurrencyCode"]; 
+  BC_CODE = (const char*)doc["BC_CODE"]; 
 
   WEATHER_API_KEY = (const char*)doc["WEATHER"]["API_KEY"]; 
   CityIDs[0] = doc["WEATHER"]["CITY_ID"]; 
@@ -1350,7 +1362,7 @@ void scrollMessage(String msg) {
     }
 
     matrix.write(); // Send bitmap to display
-    delay(displayScrollSpeed);
+    delay(SCROLLING_SPEED);
   }
   matrix.setCursor(0, 0);
 }

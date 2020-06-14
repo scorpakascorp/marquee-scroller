@@ -18,7 +18,7 @@
 
 #include "OpenWeatherMapClient.h"
 #include "TimeDB.h"
-#include "NewsApiClient.h" 
+#include "NewsApiClient.h"
 #include "OctoPrintClient.h"
 #include "BitcoinApiClient.h"
 #include "PiHoleClient.h"
@@ -47,7 +47,8 @@ void handleBitcoinConfigure();
 void handleConfigure();
 void handleDisplay();
 void handleForgetWifi();
-void handleLocations();
+void handleGetJson();
+void handleSaveMain();
 void handleNewsConfigure();
 void handleOctoprintConfigure();
 void handlePiholeConfigure();
@@ -70,18 +71,18 @@ bool writeConfigJson();
 bool readConfigJson();
 
 //declairing prototypes
-void configModeCallback (WiFiManager *myWiFiManager);
+void configModeCallback(WiFiManager *myWiFiManager);
 int8_t getWifiQuality();
 
 // LED Settings
 const int offset = 1;
 int refresh = 0;
 String message = "hello";
-int spacer = 1;  // dots between letters
+int spacer = 1;         // dots between letters
 int width = 5 + spacer; // The font width is 5 pixels + spacer
 Max72xxPanel matrix = Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
-String Wide_Clock_Style = "1";  //1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
-float UtcOffset;  //time zone offsets that correspond with the CityID above (offset from GMT)
+String Wide_Clock_Style = "1"; //1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
+float UtcOffset;               //time zone offsets that correspond with the CityID above (offset from GMT)
 const String scrollSpacer = " --- ";
 
 // Time
@@ -100,7 +101,6 @@ int newsIndex = 0;
 // Weather Client
 OpenWeatherMapClient weatherClient(WEATHER_API_KEY, CityIDs, 1, IS_METRIC);
 
-
 // OctoPrint Client
 OctoPrintClient printerClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER, OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
 int printerCount = 0;
@@ -114,33 +114,37 @@ BitcoinApiClient bitcoinClient;
 ESP8266WebServer server(WEBSERVER_PORT);
 ESP8266HTTPUpdateServer serverUpdater;
 
+// Json settings
+const size_t capacity = 2048;
+DynamicJsonDocument doc(capacity);
+
 static const char WEB_ACTIONS1[] PROGMEM = R"=====(
   <a class='w3-bar-item w3-button' href='/'><i class='fas fa-home'></i> Home</a>
   <a class='w3-bar-item w3-button' href='/configure'><i class='fas fa-cog'></i> Configure</a>
   <a class='w3-bar-item w3-button' href='/configurenews'><i class='far fa-newspaper'></i> News</a>
   <a class='w3-bar-item w3-button' href='/configureoctoprint'><i class='fas fa-cube'></i> OctoPrint</a>
-)====="; 
+)=====";
 
 static const char WEB_ACTIONS2[] PROGMEM = R"=====(
   <a class='w3-bar-item w3-button' href='/configurebitcoin'><i class='fab fa-bitcoin'></i> Bitcoin</a>
   <a class='w3-bar-item w3-button' href='/configurepihole'><i class='fas fa-network-wired'></i> Pi-hole</a>
   <a class='w3-bar-item w3-button' href='/pull'><i class='fas fa-cloud-download-alt'></i> Refresh Data</a>
-  <a class='w3-bar-item w3-button' href='/display'>
-)=====";    
+  < class='w3-bar-item w3-button' href='/display'>
+)=====";
 
 static const char WEB_ACTION3[] PROGMEM = R"=====(
-  </a><a class='w3-bar-item w3-button' href='/systemreset' onclick='return confirm(\"Do you want to reset to default weather settings?\")'><i class='fas fa-undo'></i> Reset Settings</a>
+  <a class='w3-bar-item w3-button' href='/systemreset' onclick='return confirm(\"Do you want to reset to default weather settings?\")'><i class='fas fa-undo'></i> Reset Settings</a>
   <a class='w3-bar-item w3-button' href='/forgetwifi' onclick='return confirm(\"Do you want to forget to WiFi connection?\")'><i class='fas fa-wifi'></i> Forget WiFi</a>
   <a class='w3-bar-item w3-button' href='/update'><i class='fas fa-wrench'></i> Firmware Update</a>
   <a class='w3-bar-item w3-button' href='https://github.com/Qrome/marquee-scroller' target='_blank'><i class='fas fa-question-circle'></i> About</a>
-)====="; 
+)=====";
 
 static const char CHANGE_FORM1[] PROGMEM = R"=====(
-  <form class='w3-container' action='/locations' method='get'><h2>Configure:</h2>
+  <form class='w3-container' action='/savemain' method='get'><h2>Configure:</h2>
   <label>TimeZone DB API Key (get from <a href='https://timezonedb.com/register' target='_BLANK'>here</a>)</label>
-  <input class='w3-input w3-border w3-margin-bottom' type='text' name='TimeZoneDB' value='%TIMEDB_API_KEY%' maxlength='60'>
+  <input class='w3-input w3-border w3-margin-bottom' type='text' name='TIMEDB_API_KEY' value='%TIMEDB_API_KEY%' maxlength='60'>
   <label>OpenWeatherMap API Key (get from <a href='https://openweathermap.org/' target='_BLANK'>here</a>)</label>
-  <input class='w3-input w3-border w3-margin-bottom' type='text' name='openWeatherMapApiKey' value='%WEATHERKEY%' maxlength='70'>
+  <input class='w3-input w3-border w3-margin-bottom' type='text' name='WEATHER_API_KEY' value='%WEATHERKEY%' maxlength='70'>
   <p><label>%CITYNAME1% (<a href='http://openweathermap.org/find' target='_BLANK'><i class='fas fa-search'></i> Search for City ID</a>)</label>
   <input class='w3-input w3-border w3-margin-bottom' type='text' name='city1' value='%CITY1%' onkeypress='return isNumberKey(event)'></p>
   <p><input name='metric' class='w3-check w3-margin-top' type='checkbox' %CHECKED%> Use Metric (Celsius)</p>
@@ -152,20 +156,20 @@ static const char CHANGE_FORM1[] PROGMEM = R"=====(
   <p><input name='showhumidity' class='w3-check w3-margin-top' type='checkbox' %HUMIDITY_CHECKED%> Display Humidity</p>
   <p><input name='showwind' class='w3-check w3-margin-top' type='checkbox' %WIND_CHECKED%> Display Wind</p>
   <p><input name='showpressure' class='w3-check w3-margin-top' type='checkbox' %PRESSURE_CHECKED%> Display Barometric Pressure</p>
-  <p><input name='is24hour' class='w3-check w3-margin-top' type='checkbox' %IS_24HOUR_CHECKED%> Use 24 Hour Clock (military time)</p>
+  <p><input name='IS_24HOUR' class='w3-check w3-margin-top' type='checkbox' %IS_24HOUR_CHECKED%> Use 24 Hour Clock (military time)</p>
 )=====";
 
 static const char CHANGE_FORM2[] PROGMEM = R"=====(
-  <p><input name='isPM' class='w3-check w3-margin-top' type='checkbox' %IS_PM_CHECKED%> Show PM indicator (only 12h format)</p>
+  <p><input name='IS_PM' class='w3-check w3-margin-top' type='checkbox' %IS_PM_CHECKED%> Show PM indicator (only 12h format)</p>
   <p><input name='flashseconds' class='w3-check w3-margin-top' type='checkbox' %FLASHSECONDS%> Flash : in the time</p>
   <p><label>Marquee Message (up to 60 chars)</label><input class='w3-input w3-border w3-margin-bottom' type='text' name='marqueeMsg' value='%USER_MESSAGE%' maxlength='60'></p>
   <p><label>Start Time </label><input name='startTime' type='time' value='%TIME_TO_DISPLAY_ON%'></p>
   <p><label>End Time </label><input name='endTime' type='time' value='%TIME_TO_DISPLAY_OFF%'></p>
-  <p>Display Brightness <input class='w3-border w3-margin-bottom' name='ledintensity' type='number' min='0' max='15' value='%LED_BRIGHTNESS%'></p>
-  <p>Display Scroll Speed <select class='w3-option w3-padding' name='scrollspeed'>%SCROLLOPTIONS%</select></p>
+  <p>Display Brightness <input class='w3-border w3-margin-bottom' name='LED_BRIGHTNESS' type='number' min='0' max='15' value='%LED_BRIGHTNESS%'></p>
+  <p>Display Scroll Speed <select class='w3-option w3-padding' name='SCROLLING_SPEED'>%SCROLLING_SPEED%</select></p>
   <p>Minutes Between Refresh Data <select class='w3-option w3-padding' name='refresh'>%OPTIONS%</select></p>
   <p>Minutes Between Scrolling Data <input class='w3-border w3-margin-bottom' name='refreshDisplay' type='number' min='1' max='10' value='%REFRESH_DISPLAY%'></p>
-)====="; 
+)=====";
 
 static const char CHANGE_FORM3[] PROGMEM = R"=====(
   <hr><p><input name='isBasicAuth' class='w3-check w3-margin-top' type='checkbox' %IS_BASICAUTH_CHECKED%> Use Security Credentials for Configuration Changes</p>
@@ -173,13 +177,13 @@ static const char CHANGE_FORM3[] PROGMEM = R"=====(
   <p><label>Marquee Password </label><input class='w3-input w3-border w3-margin-bottom' type='password' name='stationpassword' value='%STATIONPASSWORD%'></p>
   <p><button class='w3-button w3-block w3-green w3-section w3-padding' type='submit'>Save</button></p></form>
   <script>function isNumberKey(e){var h=e.which?e.which:event.keyCode;return!(h>31&&(h<48||h>57))}</script>
-)====="; 
+)=====";
 
 static const char BITCOIN_FORM[] PROGMEM = R"=====(
   <form class='w3-container' action='/savebitcoin' method='get'><h2>Bitcoin Configuration:</h2>
   <p>Select Bitcoin Currency <select class='w3-option w3-padding' name='bitcoincurrency'>%BITCOINOPTIONS%</select></p>
   <button class='w3-button w3-block w3-grey w3-section w3-padding' type='submit'>Save</button></form>
-)====="; 
+)=====";
 
 static const char CURRENCY_OPTIONS[] PROGMEM = R"=====(
     <option value='NONE'>NONE</option>"
@@ -191,13 +195,13 @@ static const char CURRENCY_OPTIONS[] PROGMEM = R"=====(
     <option value='EUR'>Euro</option>
     <option value='GBP'>British Pound Sterling</option>
     <option value='XAU'>Gold (troy ounce)</option>
-)====="; 
+)=====";
 
 static const char WIDECLOCK_FORM[] PROGMEM = R"=====(
   <form class='w3-container' action='/savewideclock' method='get'><h2>Wide Clock Configuration:</h2>
   <p>Wide Clock Display Format <select class='w3-option w3-padding' name='wideclockformat'>%WIDECLOCKOPTIONS%</select></p>
   <button class='w3-button w3-block w3-grey w3-section w3-padding' type='submit'>Save</button></form>
-)====="; 
+)=====";
 
 static const char PIHOLE_FORM[] PROGMEM = R"=====(
   <form class='w3-container' action='/savepihole' method='get'><h2>Pi-hole Configuration:</h2>
@@ -207,14 +211,14 @@ static const char PIHOLE_FORM[] PROGMEM = R"=====(
   <input type='button' value='Test Connection and JSON Response' onclick='testPiHole()'><p id='PiHoleTest'></p>
   <button class='w3-button w3-block w3-green w3-section w3-padding' type='submit'>Save</button></form>
   <script>function isNumberKey(e){var h=e.which?e.which:event.keyCode;return!(h>31&&(h<48||h>57))}</script>
-)====="; 
+)=====";
 
 static const char PIHOLE_TEST[] PROGMEM = R"=====(
   <script>function testPiHole(){var e=document.getElementById(\"PiHoleTest\"),t=document.getElementById(\"piholeAddress\").value,
   n=document.getElementById(\"piholePort\").value;
   if(e.innerHTML=\"\",\"\"==t||\"\"==n)return e.innerHTML=\"* Address and Port are required\",
   void(e.style.background=\"\");var r=\"http://\"+t+\":\"+n;r+=\"/admin/api.php?summary\",window.open(r,\"_blank\").focus()}</script>
-)====="; 
+)=====";
 
 static const char NEWS_FORM1[] PROGMEM = R"=====(
   <form class='w3-container' action='/savenews' method='get'><h2>News Configuration:</h2>
@@ -227,7 +231,7 @@ static const char NEWS_FORM1[] PROGMEM = R"=====(
   obj.sources.forEach(t)}}};xmlhttp.send();function t(it){if(it!=null){if(s==it.id){se=' selected'}else{se=''}tt+='<option'+se+'>'+it.id+'</option>';
   document.getElementById('newssource').innerHTML=tt}}</script>
   <button class='w3-button w3-block w3-grey w3-section w3-padding' type='submit'>Save</button></form>
-)====="; 
+)=====";
 
 static const char OCTO_FORM[] PROGMEM = R"=====(
   <form class='w3-container' action='/saveoctoprint' method='get'><h2>OctoPrint Configuration:</h2>
@@ -240,7 +244,7 @@ static const char OCTO_FORM[] PROGMEM = R"=====(
   <label>OctoPrint Password </label><input class='w3-input w3-border w3-margin-bottom' type='password' name='octoPass' value='%OCTOPASS%'>
   <button class='w3-button w3-block w3-green w3-section w3-padding' type='submit'>Save</button></form>
   <script>function isNumberKey(e){var h=e.which?e.which:event.keyCode;return!(h>31&&(h<48||h>57))}</script>
-)====="; 
+)=====";
 
 const int TIMEOUT = 500; // 500 = 1/2 second
 int timeoutCount = 0;
@@ -249,5 +253,3 @@ int timeoutCount = 0;
 int externalLight = LED_BUILTIN; // LED_BUILTIN is is the built in LED on the Wemos
 
 #endif
-
-
