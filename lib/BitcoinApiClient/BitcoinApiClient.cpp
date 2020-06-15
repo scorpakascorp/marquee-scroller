@@ -24,7 +24,7 @@ SOFTWARE.
 #include "BitcoinApiClient.h"
 
 BitcoinApiClient::BitcoinApiClient() {
-  //Constructor
+  // Constructor
 }
 
 void BitcoinApiClient::updateBitcoinData(String currencyCode) {
@@ -33,12 +33,13 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
     bpiData.rate = "";
     bpiData.description = "";
     bpiData.rate_float = 0;
-    return; // nothing to do here
+    return;  // nothing to do here
   }
   WiFiClient client;
   HTTPClient http;
-  
-  String apiGetData = "http://" + String(servername) + "/v1/bpi/currentprice/" + currencyCode + ".json";
+
+  String apiGetData = "http://" + String(servername) + "/v1/bpi/currentprice/" +
+                      currencyCode + ".json";
 
   Serial.println("Getting Bitcoin Data");
   Serial.println(apiGetData);
@@ -49,44 +50,47 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
 
   if (httpCode > 0) {  // checks for connection
     Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-    if(httpCode == HTTP_CODE_OK) {
-      // get length of document (is -1 when Server sends no Content-Length header)
+    if (httpCode == HTTP_CODE_OK) {
+      // get length of document (is -1 when Server sends no Content-Length
+      // header)
       int len = http.getSize();
       // create buffer for read
-      char buff[128] = { 0 };
+      char buff[128] = {0};
       // get tcp stream
-      WiFiClient * stream = http.getStreamPtr();
+      WiFiClient* stream = http.getStreamPtr();
       // read all data from server
       Serial.println("Start reading...");
-      while(http.connected() && (len > 0 || len == -1)) {
+      while (http.connected() && (len > 0 || len == -1)) {
         // get available data size
         size_t size = stream->available();
-        if(size) {
+        if (size) {
           // read up to 128 byte
-          int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-          for(int i=0;i<c;i++) {
+          int c = stream->readBytes(
+              buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+          for (int i = 0; i < c; i++) {
             result += buff[i];
           }
-            
-          if(len > 0)
+
+          if (len > 0)
             len -= c;
-          }
+        }
         delay(1);
       }
     }
     http.end();
   } else {
-    Serial.println("connection for BitCoin data failed: " + String(apiGetData)); //error message if no client connect
+    Serial.println("connection for BitCoin data failed: " +
+                   String(apiGetData));  // error message if no client connect
     Serial.println();
     return;
   }
-  //Clean dirty results
+  // Clean dirty results
   result.remove(0, result.indexOf("{"));
   result.remove(result.lastIndexOf("}") + 1);
 
-  char jsonArray [result.length()+1];
-  result.toCharArray(jsonArray,sizeof(jsonArray));
-  //jsonArray[result.length() + 1] = '\0';
+  char jsonArray[result.length() + 1];
+  result.toCharArray(jsonArray, sizeof(jsonArray));
+  // jsonArray[result.length() + 1] = '\0';
   DynamicJsonDocument doc(1024);
   DeserializationError error = deserializeJson(doc, jsonArray);
   if (error) {
@@ -94,11 +98,14 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
     Serial.println(error.c_str());
     return;
   }
-  
+
   bpiData.code = (const char*)doc["bpi"][String(currencyCode)]["code"];
   bpiData.rate = (const char*)doc["bpi"][String(currencyCode)]["rate"];
-  bpiData.description = (const char*)doc["bpi"][String(currencyCode)]["description"];
-  bpiData.rate_float = String((const char*)doc["bpi"][String(currencyCode)]["rate_float"]).toFloat();
+  bpiData.description =
+      (const char*)doc["bpi"][String(currencyCode)]["description"];
+  bpiData.rate_float =
+      String((const char*)doc["bpi"][String(currencyCode)]["rate_float"])
+          .toFloat();
 
   Serial.println("code: " + bpiData.code);
   Serial.println("rate: " + bpiData.rate);
@@ -125,4 +132,3 @@ String BitcoinApiClient::getDescription() {
 float BitcoinApiClient::getRateFloat() {
   return bpiData.rate_float;
 }
-

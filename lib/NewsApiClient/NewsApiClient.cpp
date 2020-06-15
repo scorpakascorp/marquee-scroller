@@ -21,12 +21,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
 #include "NewsApiClient.h"
 
-
-
-#define arr_len( x )  ( sizeof( x ) / sizeof( *x ) )
+#define arr_len(x) (sizeof(x) / sizeof(*x))
 
 NewsApiClient::NewsApiClient(String ApiKey, String NewsSource) {
   updateNewsClient(ApiKey, NewsSource);
@@ -43,7 +40,9 @@ void NewsApiClient::updateNews() {
   WiFiClient client;
   HTTPClient http;
 
-  String apiGetData = "http://" + String(servername) + "/v2/top-headlines?sources=" + mySource + "&apiKey=" + myApiKey;
+  String apiGetData = "http://" + String(servername) +
+                      "/v2/top-headlines?sources=" + mySource +
+                      "&apiKey=" + myApiKey;
 
   Serial.println("*NAC: Getting News Data");
   Serial.println(apiGetData);
@@ -52,34 +51,37 @@ void NewsApiClient::updateNews() {
 
   if (httpCode > 0) {  // checks for connection
     Serial.printf("*NAC: [HTTP] GET... code: %d\n", httpCode);
-    if(httpCode == HTTP_CODE_OK) {
-      // get lenght of document (is -1 when Server sends no Content-Length header)
+    if (httpCode == HTTP_CODE_OK) {
+      // get lenght of document (is -1 when Server sends no Content-Length
+      // header)
       int len = http.getSize();
       // create buffer for read
-      char buff[128] = { 0 };
+      char buff[128] = {0};
       // get tcp stream
-      WiFiClient * stream = http.getStreamPtr();
+      WiFiClient* stream = http.getStreamPtr();
       // read all data from server
       Serial.println("*NAC: Start parsing...");
-      while(http.connected() && (len > 0 || len == -1)) {
+      while (http.connected() && (len > 0 || len == -1)) {
         // get available data size
         size_t size = stream->available();
-        if(size) {
+        if (size) {
           // read up to 128 byte
-          int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-          for(int i=0;i<c;i++) {
-            parser.parse(buff[i]); 
+          int c = stream->readBytes(
+              buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+          for (int i = 0; i < c; i++) {
+            parser.parse(buff[i]);
           }
-            
-          if(len > 0)
+
+          if (len > 0)
             len -= c;
-          }
+        }
         delay(1);
       }
     }
     http.end();
   } else {
-    Serial.println("*NAC: connection for news data failed: " + String(apiGetData)); //error message if no client connect
+    Serial.println("*NAC: connection for news data failed: " +
+                   String(apiGetData));  // error message if no client connect
     Serial.println();
     return;
   }
@@ -101,9 +103,7 @@ void NewsApiClient::updateNewsSource(String source) {
   mySource = source;
 }
 
-void NewsApiClient::whitespace(char c) {
-
-}
+void NewsApiClient::whitespace(char c) {}
 
 void NewsApiClient::startDocument() {
   counterTitle = 0;
@@ -132,19 +132,14 @@ void NewsApiClient::value(String value) {
   Serial.println("*NAC: " + currentKey + "=" + value);
 }
 
-void NewsApiClient::endArray() {
-}
+void NewsApiClient::endArray() {}
 
-void NewsApiClient::endObject() {
-}
-void NewsApiClient::startArray() {
-}
+void NewsApiClient::endObject() {}
+void NewsApiClient::startArray() {}
 
-void NewsApiClient::startObject() {
-}
+void NewsApiClient::startObject() {}
 
-void NewsApiClient::endDocument() {
-}
+void NewsApiClient::endDocument() {}
 
 String NewsApiClient::cleanText(String text) {
   text.replace("’", "'");

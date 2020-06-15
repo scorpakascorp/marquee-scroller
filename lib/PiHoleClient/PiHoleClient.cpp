@@ -24,39 +24,40 @@ SOFTWARE.
 #include "PiHoleClient.h"
 
 PiHoleClient::PiHoleClient() {
-  //Constructor
+  // Constructor
 }
 
 void PiHoleClient::getPiHoleData(String server, int port) {
-
   errorMessage = "";
   String response = "";
 
-  String apiGetData = "http://" + server + ":" + String(port) + "/admin/api.php?summary";
+  String apiGetData =
+      "http://" + server + ":" + String(port) + "/admin/api.php?summary";
   Serial.println("Sending: " + apiGetData);
   WiFiClient client;
-  HTTPClient http;  //Object of class HTTPClient
-  http.begin(client, apiGetData);// get the result
+  HTTPClient http;                 // Object of class HTTPClient
+  http.begin(client, apiGetData);  // get the result
   int httpCode = http.GET();
-  //Check the returning code
+  // Check the returning code
   if (httpCode > 0) {
     response = http.getString();
-    http.end();   //Close connection
+    http.end();  // Close connection
     if (httpCode != 200) {
       // Bad Response Code
       errorMessage = "Error response (" + String(httpCode) + "): " + response;
       Serial.println(errorMessage);
-      return;  
+      return;
     }
     Serial.println("Response Code: " + String(httpCode));
-    //Serial.println("Response: " + response);
+    // Serial.println("Response: " + response);
   } else {
     errorMessage = "Failed to connect and get data: " + apiGetData;
     Serial.println(errorMessage);
     return;
   }
-  
-  const size_t bufferSize = 2*JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(17) + 470;
+
+  const size_t bufferSize =
+      2 * JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(17) + 470;
   DynamicJsonDocument doc(bufferSize);
   DeserializationError error = deserializeJson(doc, response);
   if (error) {
@@ -65,29 +66,31 @@ void PiHoleClient::getPiHoleData(String server, int port) {
     return;
   }
 
-  piHoleData.domains_being_blocked = (const char*)doc["domains_being_blocked"];
-  piHoleData.dns_queries_today = (const char*)doc["dns_queries_today"];
-  piHoleData.ads_blocked_today = (const char*)doc["ads_blocked_today"];
-  piHoleData.ads_percentage_today = (const char*)doc["ads_percentage_today"];
-  piHoleData.unique_domains = (const char*)doc["unique_domains"];
-  piHoleData.queries_forwarded = (const char*)doc["queries_forwarded"];
-  piHoleData.queries_cached = (const char*)doc["queries_cached"];
-  piHoleData.clients_ever_seen = (const char*)doc["clients_ever_seen"];
-  piHoleData.unique_clients = (const char*)doc["unique_clients"];
-  piHoleData.dns_queries_all_types = (const char*)doc["dns_queries_all_types"];
-  piHoleData.reply_NODATA = (const char*)doc["reply_NODATA"];
-  piHoleData.reply_NXDOMAIN = (const char*)doc["reply_NXDOMAIN"];
-  piHoleData.reply_CNAME = (const char*)doc["reply_CNAME"];
-  piHoleData.reply_IP = (const char*)doc["reply_IP"];
-  piHoleData.privacy_level = (const char*)doc["privacy_level"];
-  piHoleData.piHoleStatus = (const char*)doc["status"];
+  piHoleData.domains_being_blocked = (const char *)doc["domains_being_blocked"];
+  piHoleData.dns_queries_today = (const char *)doc["dns_queries_today"];
+  piHoleData.ads_blocked_today = (const char *)doc["ads_blocked_today"];
+  piHoleData.ads_percentage_today = (const char *)doc["ads_percentage_today"];
+  piHoleData.unique_domains = (const char *)doc["unique_domains"];
+  piHoleData.queries_forwarded = (const char *)doc["queries_forwarded"];
+  piHoleData.queries_cached = (const char *)doc["queries_cached"];
+  piHoleData.clients_ever_seen = (const char *)doc["clients_ever_seen"];
+  piHoleData.unique_clients = (const char *)doc["unique_clients"];
+  piHoleData.dns_queries_all_types = (const char *)doc["dns_queries_all_types"];
+  piHoleData.reply_NODATA = (const char *)doc["reply_NODATA"];
+  piHoleData.reply_NXDOMAIN = (const char *)doc["reply_NXDOMAIN"];
+  piHoleData.reply_CNAME = (const char *)doc["reply_CNAME"];
+  piHoleData.reply_IP = (const char *)doc["reply_IP"];
+  piHoleData.privacy_level = (const char *)doc["privacy_level"];
+  piHoleData.piHoleStatus = (const char *)doc["status"];
 
   Serial.println("Pi-Hole Status: " + piHoleData.piHoleStatus);
-  Serial.println("Todays Percentage Blocked: " + piHoleData.ads_percentage_today);
+  Serial.println("Todays Percentage Blocked: " +
+                 piHoleData.ads_percentage_today);
   Serial.println();
 }
 
-void PiHoleClient::getTopClientsBlocked(String server, int port, String apiKey) {
+void PiHoleClient::getTopClientsBlocked(String server, int port,
+                                        String apiKey) {
   errorMessage = "";
   resetClientsBlocked();
 
@@ -98,24 +101,25 @@ void PiHoleClient::getTopClientsBlocked(String server, int port, String apiKey) 
 
   String response = "";
 
-  String apiGetData = "http://" + server + ":" + String(port) + "/admin/api.php?topClientsBlocked=3&auth=" + apiKey;
+  String apiGetData = "http://" + server + ":" + String(port) +
+                      "/admin/api.php?topClientsBlocked=3&auth=" + apiKey;
   Serial.println("Sending: " + apiGetData);
   WiFiClient client;
-  HTTPClient http;  //Object of class HTTPClient
-  http.begin(client, apiGetData);// get the result
+  HTTPClient http;                 // Object of class HTTPClient
+  http.begin(client, apiGetData);  // get the result
   int httpCode = http.GET();
-  //Check the returning code
+  // Check the returning code
   if (httpCode > 0) {
     response = http.getString();
-    http.end();   //Close connection
+    http.end();  // Close connection
     if (httpCode != 200) {
       // Bad Response Code
       errorMessage = "Error response (" + String(httpCode) + "): " + response;
       Serial.println(errorMessage);
-      return;  
+      return;
     }
     Serial.println("Response Code: " + String(httpCode));
-    //Serial.println("Response: " + response);
+    // Serial.println("Response: " + response);
   } else {
     errorMessage = "Failed to get data: " + apiGetData;
     Serial.println(errorMessage);
@@ -138,7 +142,9 @@ void PiHoleClient::getTopClientsBlocked(String server, int port, String apiKey) 
   for (JsonPair p : blocked) {
     blockedClients[count].clientAddress = p.key().c_str();
     blockedClients[count].blockedCount = p.value().as<int>();
-    Serial.println("Blocked Client " + String(count+1) + ": " + blockedClients[count].clientAddress + " (" + String(blockedClients[count].blockedCount) + ")");
+    Serial.println("Blocked Client " + String(count + 1) + ": " +
+                   blockedClients[count].clientAddress + " (" +
+                   String(blockedClients[count].blockedCount) + ")");
     count++;
   }
   Serial.println();
@@ -147,8 +153,9 @@ void PiHoleClient::getTopClientsBlocked(String server, int port, String apiKey) 
 void PiHoleClient::getGraphData(String server, int port) {
   WiFiClient client;
   HTTPClient http;
-  
-  String apiGetData = "http://" + server + ":" + String(port) + "/admin/api.php?overTimeData10mins";
+
+  String apiGetData = "http://" + server + ":" + String(port) +
+                      "/admin/api.php?overTimeData10mins";
   resetBlockedGraphData();
   Serial.println("Getting Pi-Hole Graph Data");
   Serial.println(apiGetData);
@@ -163,29 +170,33 @@ void PiHoleClient::getGraphData(String server, int port) {
 
   if (httpCode > 0) {  // checks for connection
     Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-    if(httpCode == HTTP_CODE_OK) {
-      // get length of document (is -1 when Server sends no Content-Length header)
+    if (httpCode == HTTP_CODE_OK) {
+      // get length of document (is -1 when Server sends no Content-Length
+      // header)
       int len = http.getSize();
       // create buffer for read
-      char buff[128] = { 0 };
+      char buff[128] = {0};
       // get tcp stream
-      WiFiClient * stream = http.getStreamPtr();
+      WiFiClient *stream = http.getStreamPtr();
       // read all data from server
       Serial.println("Start reading...");
-      while(http.connected() && (len > 0 || len == -1)) {
+      while (http.connected() && (len > 0 || len == -1)) {
         // get available data size
         size_t size = stream->available();
-        if(size) {
+        if (size) {
           // read up to 128 byte
-          int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-          for(int i=0;i<c;i++) {
+          int c = stream->readBytes(
+              buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+          for (int i = 0; i < c; i++) {
             if (track && countBracket >= 3) {
               if (buff[i] == ',' || buff[i] == '}') {
                 blocked[blockedCount] = result.toInt();
                 if (blocked[blockedCount] > blockedHigh) {
                   blockedHigh = blocked[blockedCount];
                 }
-                //Serial.println("Pi-hole Graph point (" + String(blockedCount+1) + "): " + String(blocked[blockedCount]));
+                // Serial.println("Pi-hole Graph point (" +
+                // String(blockedCount+1) + "): " +
+                // String(blocked[blockedCount]));
                 blockedCount++;
                 result = "";
                 track = false;
@@ -195,24 +206,23 @@ void PiHoleClient::getGraphData(String server, int port) {
             } else if (buff[i] == '{') {
               countBracket++;
             } else if (countBracket >= 3 && buff[i] == ':') {
-              track = true; 
+              track = true;
             }
           }
-            
-          if(len > 0)
+
+          if (len > 0)
             len -= c;
-          }
+        }
         delay(1);
       }
     }
     http.end();
   } else {
     errorMessage = "Connection for Pi-Hole data failed: " + String(apiGetData);
-    Serial.println(errorMessage); //error message if no client connect
+    Serial.println(errorMessage);  // error message if no client connect
     Serial.println();
     return;
   }
-
 
   Serial.println("High Value: " + String(blockedHigh));
   Serial.println("Count: " + String(blockedCount));
@@ -270,7 +280,6 @@ String PiHoleClient::getClientsEverSeen() {
   String getPrivacyLevel();
  */
 
-
 String PiHoleClient::getPiHoleStatus() {
   return piHoleData.piHoleStatus;
 }
@@ -294,7 +303,7 @@ int PiHoleClient::getBlockedHigh() {
 String PiHoleClient::getTopClientBlocked(int index) {
   return blockedClients[index].clientAddress;
 }
-  
+
 int PiHoleClient::getTopClientBlockedCount(int index) {
   return blockedClients[index].blockedCount;
 }

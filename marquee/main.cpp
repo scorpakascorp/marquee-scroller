@@ -26,22 +26,23 @@
 void setup() {
   Serial.begin(115200);
   LittleFS.begin();
-  //LittleFS.remove(CONFIG_JSON);
+  // LittleFS.remove(CONFIG_JSON);
   delay(10);
 
   // Initialize digital pin for LED
   pinMode(externalLight, OUTPUT);
 
-  //New Line to clear from start garbage
+  // New Line to clear from start garbage
   Serial.println();
 
   readConfigJson();
 
-  Serial.println("*setup(): Number of LED Displays: " + String(numberOfHorizontalDisplays));
+  Serial.println("*setup(): Number of LED Displays: " +
+                 String(numberOfHorizontalDisplays));
   // initialize dispaly
-  matrix.setIntensity(0); // Use a value between 0 and 15 for brightness
-  //matrix.setFont(&TomThumb);
-  //matrix.cp437(true);
+  matrix.setIntensity(0);  // Use a value between 0 and 15 for brightness
+  // matrix.setFont(&TomThumb);
+  // matrix.cp437(true);
 
   int maxPos = numberOfHorizontalDisplays * numberOfVerticalDisplays;
   for (int i = 0; i < maxPos; i++) {
@@ -50,7 +51,7 @@ void setup() {
   }
 
   Serial.println("*setup(): Matrix created");
-  matrix.fillScreen(LOW); // show black
+  matrix.fillScreen(LOW);  // show black
   centerPrint("-*-");
 
   // tone(BUZZER_PIN, 415, 500);
@@ -71,22 +72,26 @@ void setup() {
   }
   delay(100);
   matrix.setIntensity(LED_BRIGHTNESS);
-  //noTone(BUZZER_PIN);
+  // noTone(BUZZER_PIN);
 
-  //WiFiManager
-  //Local intialization. Once its business is done, there is no need to keep it around
+  // WiFiManager
+  // Local intialization. Once its business is done, there is no need to keep it
+  // around
   WiFiManager wifiManager;
 
   // Uncomment for testing wifi manager
-  //wifiManager.resetSettings();
+  // wifiManager.resetSettings();
   wifiManager.setAPCallback(configModeCallback);
 
-  //Custom Station (client) Static IP Configuration - Set custom IP for your Network (IP, Gateway, Subnet mask)
-  //wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,99), IPAddress(192,168,0,1), IPAddress(255,255,255,0));
+  // Custom Station (client) Static IP Configuration - Set custom IP for your
+  // Network (IP, Gateway, Subnet mask)
+  // wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,99),
+  // IPAddress(192,168,0,1), IPAddress(255,255,255,0));
 
   String hostname(HOSTNAME);
   hostname += String(ESP.getChipId(), HEX);
-  if (!wifiManager.autoConnect((const char *)hostname.c_str())) {// new addition
+  if (!wifiManager.autoConnect(
+          (const char *)hostname.c_str())) {  // new addition
     delay(3000);
     WiFi.disconnect(true);
     ESP.reset();
@@ -99,22 +104,24 @@ void setup() {
   Serial.println("%");
 
   if (ENABLE_OTA) {
-    ArduinoOTA.onStart([]() {
-      Serial.println("*setup() OTA: Start");
-    });
-    ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
-    });
+    ArduinoOTA.onStart([]() { Serial.println("*setup() OTA: Start"); });
+    ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("*setup() OTA: Progress: %u%%\r", (progress / (total / 100)));
+      Serial.printf("*setup() OTA: Progress: %u%%\r",
+                    (progress / (total / 100)));
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("*setup() OTA: Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      if (error == OTA_AUTH_ERROR)
+        Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR)
+        Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR)
+        Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR)
+        Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR)
+        Serial.println("End Failed");
     });
     ArduinoOTA.setHostname((const char *)hostname.c_str());
     if (OTA_Password != "") {
@@ -143,14 +150,17 @@ void setup() {
     server.on("/configurepihole", handlePiholeConfigure);
     server.on("/display", handleDisplay);
     server.onNotFound(redirectHome);
-    serverUpdater.setup(&server, "/update", WEB_INTERFACE_USER, WEB_INTERFACE_PASS);
+    serverUpdater.setup(&server, "/update", WEB_INTERFACE_USER,
+                        WEB_INTERFACE_PASS);
     // Start the server
     server.begin();
     Serial.println("*setup(): Server started");
     // Print the IP address
-    String webAddress = "http://" + WiFi.localIP().toString() + ":" + String(WEBSERVER_PORT) + "/";
+    String webAddress = "http://" + WiFi.localIP().toString() + ":" +
+                        String(WEBSERVER_PORT) + "/";
     Serial.println("*setup(): Use this URL : " + webAddress);
-    scrollMessage(" v" + String(VERSION) + "  IP: " + WiFi.localIP().toString() + "  ");
+    scrollMessage(" v" + String(VERSION) +
+                  "  IP: " + WiFi.localIP().toString() + "  ");
   } else {
     Serial.println("*setup(): Web Interface is Disabled");
     scrollMessage("Web Interface is Disabled");
@@ -160,14 +170,16 @@ void setup() {
 }
 
 void loop() {
-  //Get some Weather Data to serve
-  if ((getMinutesFromLastRefresh() >= minutesBetweenDataRefresh) || lastEpoch == 0) {
+  // Get some Weather Data to serve
+  if ((getMinutesFromLastRefresh() >= minutesBetweenDataRefresh) ||
+      lastEpoch == 0) {
     getUpdatedData();
   }
-  checkDisplay(); // this will see if we need to turn it on or off for night mode.
+  checkDisplay();  // this will see if we need to turn it on or off for night
+                   // mode.
 
-  if (lastMinute != TimeDB.zeroPad(minute())) {
-    lastMinute = TimeDB.zeroPad(minute());
+  if (lastMinute != TimeDBclient.zeroPad(minute())) {
+    lastMinute = TimeDBclient.zeroPad(minute());
 
     if (weatherClient.getError() != "") {
       scrollMessage(weatherClient.getError());
@@ -177,10 +189,13 @@ void loop() {
     if (displayOn) {
       matrix.shutdown(false);
     }
-    matrix.fillScreen(LOW); // show black
+    matrix.fillScreen(LOW);  // show black
     if (OCTOPRINT_ENABLED) {
-      if (displayOn && ((printerClient.isOperational() || printerClient.isPrinting()) || printerCount == 0)) {
-        // This should only get called if the printer is actually running or if it has been 2 minutes since last check
+      if (displayOn &&
+          ((printerClient.isOperational() || printerClient.isPrinting()) ||
+           printerCount == 0)) {
+        // This should only get called if the printer is actually running or if
+        // it has been 2 minutes since last check
         printerClient.getPrinterJobResults();
       }
       printerCount += 1;
@@ -189,7 +204,7 @@ void loop() {
       }
     }
 
-    displayRefreshCount --;
+    displayRefreshCount--;
     // Check to see if we need to Scroll some Data
     if (displayRefreshCount <= 0) {
       displayRefreshCount = minutesBetweenScrolling;
@@ -200,8 +215,8 @@ void loop() {
       msg += scrollSpacer;
 
       if (WEATHER_DATE) {
-        msg += TimeDB.getDayName() + ", ";
-        msg += TimeDB.getMonthName() + " " + day();
+        msg += TimeDBclient.getDayName() + ", ";
+        msg += TimeDBclient.getMonthName() + " " + day();
         msg += scrollSpacer;
       }
       if (WEATHER_CITY) {
@@ -215,15 +230,15 @@ void loop() {
         String feels_like = weatherClient.getFeelsLikeRounded(0);
         msg += "Feels like: " + feels_like + getTempSymbol();
         msg += scrollSpacer;
-      } 
-        
+      }
 
-      //show high/low temperature
+      // show high/low temperature
       if (WEATHER_HIGHLOW) {
-        msg += "Hi:" + weatherClient.getHigh(0) + getTempSymbol() + " / Lo:" + weatherClient.getLow(0) + " " + getTempSymbol();
+        msg += "Hi:" + weatherClient.getHigh(0) + getTempSymbol() +
+               " / Lo:" + weatherClient.getLow(0) + " " + getTempSymbol();
         msg += scrollSpacer;
       }
-      
+
       if (WEATHER_CONDITION) {
         msg += description + ". ";
       }
@@ -231,10 +246,11 @@ void loop() {
         msg += "Humid: " + weatherClient.getHumidityRounded(0) + "%  ";
       }
       if (WEATHER_WIND) {
-        msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " + weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
+        msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " +
+               weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
         msg += scrollSpacer;
       }
-      //line to show barometric pressure
+      // line to show barometric pressure
       if (WEATHER_PRESSURE) {
         msg += "Press: " + weatherClient.getPressure(0) + getPressureSymbol();
         msg += scrollSpacer;
@@ -244,7 +260,7 @@ void loop() {
         msg += USER_MESSAGE;
         msg += scrollSpacer;
       }
-      
+
       if (NEWS_ENABLED) {
         msg += NEWS_SOURCE + ": " + newsClient.getTitle(newsIndex);
         msg += scrollSpacer;
@@ -259,15 +275,18 @@ void loop() {
         msg += scrollSpacer;
       }
       if (BC_CODE != "NONE" && BC_CODE != "") {
-        msg += "Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode();
-        msg += scrollSpacer;;
+        msg += "Bitcoin: " + bitcoinClient.getRate() + " " +
+               bitcoinClient.getCode();
+        msg += scrollSpacer;
+        ;
       }
       if (PIHOLE_ENABLED) {
         piholeClient.getPiHoleData(PIHOLE_SERVER, PIHOLE_PORT);
         piholeClient.getGraphData(PIHOLE_SERVER, PIHOLE_PORT);
         if (piholeClient.getPiHoleStatus() != "") {
-          msg += "Pi-hole (" + piholeClient.getPiHoleStatus() + "): " + piholeClient.getAdsPercentageToday() + "%";
-          msg += scrollSpacer; 
+          msg += "Pi-hole (" + piholeClient.getPiHoleStatus() +
+                 "): " + piholeClient.getAdsPercentageToday() + "%";
+          msg += scrollSpacer;
         }
       }
 
@@ -284,12 +303,13 @@ void loop() {
       // On Wide Display -- show the current temperature as well
       String currentTemp = weatherClient.getTempRounded(0);
       String timeSpacer = "";
-      if (currentTemp.length() <= 2) timeSpacer = " ";
+      if (currentTemp.length() <= 2)
+        timeSpacer = " ";
       currentTime += timeSpacer + currentTemp + getTempSymbol();
     }
     if (Wide_Clock_Style == "2") {
-      currentTime += secondsIndicator(false) + TimeDB.zeroPad(second());
-      matrix.fillScreen(LOW); // show black
+      currentTime += secondsIndicator(false) + TimeDBclient.zeroPad(second());
+      matrix.fillScreen(LOW);  // show black
     }
     if (Wide_Clock_Style == "3") {
       // No change this is normal clock display
@@ -308,9 +328,11 @@ void loop() {
 
 String hourMinutes(boolean isRefresh) {
   if (IS_24HOUR) {
-    return hour() + secondsIndicator(isRefresh) + TimeDB.zeroPad(minute());
+    return hour() + secondsIndicator(isRefresh) +
+           TimeDBclient.zeroPad(minute());
   } else {
-    return hourFormat12() + secondsIndicator(isRefresh) + TimeDB.zeroPad(minute());
+    return hourFormat12() + secondsIndicator(isRefresh) +
+           TimeDBclient.zeroPad(minute());
   }
 }
 
@@ -324,13 +346,14 @@ String secondsIndicator(boolean isRefresh) {
 
 boolean athentication() {
   if (WEB_INTERFACE_AUTH_ENABLED) {
-    return server.authenticate(WEB_INTERFACE_USER.c_str(), WEB_INTERFACE_PASS.c_str());
+    return server.authenticate(WEB_INTERFACE_USER.c_str(),
+                               WEB_INTERFACE_PASS.c_str());
   }
-  return true; // Authentication not required
+  return true;  // Authentication not required
 }
 
 void handlePull() {
-  getUpdatedData(); // this will force a data pull for new weather
+  getUpdatedData();  // this will force a data pull for new weather
   displayWeatherData();
 }
 
@@ -340,7 +363,8 @@ void handleSaveBitcoin() {
   }
   BC_CODE = server.arg("bitcoincurrency");
   writeConfigJson();
-  bitcoinClient.updateBitcoinData(BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
+  bitcoinClient.updateBitcoinData(
+      BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   redirectHome();
 }
 
@@ -351,7 +375,7 @@ void handleSaveWideClock() {
   if (numberOfHorizontalDisplays >= 8) {
     Wide_Clock_Style = server.arg("wideclockformat");
     writeConfigJson();
-    matrix.fillScreen(LOW); // show black
+    matrix.fillScreen(LOW);  // show black
   }
   redirectHome();
 }
@@ -363,7 +387,7 @@ void handleSaveNews() {
   NEWS_ENABLED = server.hasArg("displaynews");
   NEWS_API_KEY = server.arg("NEWS_API_KEY");
   NEWS_SOURCE = server.arg("newssource");
-  matrix.fillScreen(LOW); // show black
+  matrix.fillScreen(LOW);  // show black
   writeConfigJson();
   newsClient.updateNews();
   redirectHome();
@@ -381,7 +405,6 @@ void handleGetJson() {
   server.sendContent("");
   server.client().stop();
 }
-  
 
 void handleSaveOctoprint() {
   if (!athentication()) {
@@ -394,7 +417,7 @@ void handleSaveOctoprint() {
   OCTOPRINT_PORT = server.arg("octoPrintPort").toInt();
   OCTOPRINT_USER = server.arg("octoUser");
   OCTOPRINT_PASS = server.arg("octoPass");
-  matrix.fillScreen(LOW); // show black
+  matrix.fillScreen(LOW);  // show black
   writeConfigJson();
   if (OCTOPRINT_ENABLED) {
     printerClient.getPrinterJobResults();
@@ -447,9 +470,9 @@ void handleSaveMain() {
   WEB_INTERFACE_USER = server.arg("userid");
   WEB_INTERFACE_PASS = server.arg("stationpassword");
   weatherClient.setMetric(IS_METRIC);
-  matrix.fillScreen(LOW); // show black
+  matrix.fillScreen(LOW);  // show black
   writeConfigJson();
-  getUpdatedData(); // this will force a data pull for new weather
+  getUpdatedData();  // this will force a data pull for new weather
   redirectHome();
 }
 
@@ -468,8 +491,9 @@ void handleForgetWifi() {
   if (!athentication()) {
     return server.requestAuthentication();
   }
-  //WiFiManager
-  //Local intialization. Once its business is done, there is no need to keep it around
+  // WiFiManager
+  // Local intialization. Once its business is done, there is no need to keep it
+  // around
   redirectHome();
   WiFiManager wifiManager;
   wifiManager.resetSettings();
@@ -495,7 +519,7 @@ void handleBitcoinConfigure() {
   String bitcoinOptions = FPSTR(CURRENCY_OPTIONS);
   bitcoinOptions.replace(BC_CODE + "'", BC_CODE + "' selected");
   form.replace("%BITCOINOPTIONS%", bitcoinOptions);
-  server.sendContent(form); //Send another Chunk of form
+  server.sendContent(form);  // Send another Chunk of form
 
   sendFooter();
 
@@ -521,8 +545,11 @@ void handleWideClockConfigure() {
   if (numberOfHorizontalDisplays >= 8) {
     // Wide display options
     String form = FPSTR(WIDECLOCK_FORM);
-    String clockOptions = "<option value='1'>HH:MM Temperature</option><option value='2'>HH:MM:SS</option><option value='3'>HH:MM</option>";
-    clockOptions.replace(Wide_Clock_Style + "'", Wide_Clock_Style + "' selected");
+    String clockOptions =
+        "<option value='1'>HH:MM Temperature</option><option "
+        "value='2'>HH:MM:SS</option><option value='3'>HH:MM</option>";
+    clockOptions.replace(Wide_Clock_Style + "'",
+                         Wide_Clock_Style + "' selected");
     form.replace("%WIDECLOCKOPTIONS%", clockOptions);
     server.sendContent(form);
   }
@@ -539,7 +566,7 @@ void handleNewsConfigure() {
     return server.requestAuthentication();
   }
   digitalWrite(externalLight, LOW);
-  
+
   server.sendHeader("Cache-Control", "no-cache, no-store");
   server.sendHeader("Pragma", "no-cache");
   server.sendHeader("Expires", "-1");
@@ -556,7 +583,7 @@ void handleNewsConfigure() {
   form.replace("%NEWS_ENABLED%", NEWS_ENABLED);
   form.replace("%NEWS_API_KEY%", NEWS_API_KEY);
   form.replace("%NEWS_SOURCE%", NEWS_SOURCE);
-  server.sendContent(form); //Send news form
+  server.sendContent(form);  // Send news form
 
   sendFooter();
 
@@ -631,7 +658,7 @@ void handlePiholeConfigure() {
 
   server.sendContent(form);
   form = "";
-          
+
   sendFooter();
 
   server.sendContent("");
@@ -664,43 +691,43 @@ void handleConfigure() {
   }
   form.replace("%CITYNAME1%", cityName);
   form.replace("%CITY1%", String(CityIDs[0]));
-  
+
   String isFeelsLikeChecked = "";
   if (WEATHER_FEELSLIKE) {
     isFeelsLikeChecked = "checked='checked'";
   }
   form.replace("%FEELSLIKE_CHECKED%", isFeelsLikeChecked);
-  
+
   String isDateChecked = "";
   if (WEATHER_DATE) {
     isDateChecked = "checked='checked'";
   }
   form.replace("%DATE_CHECKED%", isDateChecked);
-  
+
   String isCityChecked = "";
   if (WEATHER_CITY) {
     isCityChecked = "checked='checked'";
   }
   form.replace("%CITY_CHECKED%", isCityChecked);
-  
+
   String isConditionChecked = "";
   if (WEATHER_CONDITION) {
     isConditionChecked = "checked='checked'";
   }
   form.replace("%CONDITION_CHECKED%", isConditionChecked);
-  
+
   String isHumidityChecked = "";
   if (WEATHER_HUMIDITY) {
     isHumidityChecked = "checked='checked'";
   }
   form.replace("%HUMIDITY_CHECKED%", isHumidityChecked);
-  
+
   String isWindChecked = "";
   if (WEATHER_WIND) {
     isWindChecked = "checked='checked'";
   }
   form.replace("%WIND_CHECKED%", isWindChecked);
-  
+
   String isPressureChecked = "";
   if (WEATHER_PRESSURE) {
     isPressureChecked = "checked='checked'";
@@ -718,7 +745,7 @@ void handleConfigure() {
     is24hourChecked = "checked='checked'";
   }
   form.replace("%IS_24HOUR_CHECKED%", is24hourChecked);
-  
+
   String checked = "";
   if (IS_METRIC) {
     checked = "checked='checked'";
@@ -742,16 +769,21 @@ void handleConfigure() {
   form.replace("%TIME_TO_DISPLAY_OFF%", TIME_TO_DISPLAY_OFF);
   form.replace("%LED_BRIGHTNESS%", String(LED_BRIGHTNESS));
   String dSpeed = String(SCROLLING_SPEED);
-  String scrollOptions = "<option value='35'>Slow</option><option value='25'>Normal</option><option value='15'>Fast</option><option value='10'>Very Fast</option>";
-  scrollOptions.replace(dSpeed + "'", dSpeed + "' selected" );
+  String scrollOptions =
+      "<option value='35'>Slow</option><option "
+      "value='25'>Normal</option><option value='15'>Fast</option><option "
+      "value='10'>Very Fast</option>";
+  scrollOptions.replace(dSpeed + "'", dSpeed + "' selected");
   form.replace("%SCROLLING_SPEED%", scrollOptions);
   String minutes = String(minutesBetweenDataRefresh);
-  String options = "<option>5</option><option>10</option><option>15</option><option>20</option><option>30</option><option>60</option>";
+  String options =
+      "<option>5</option><option>10</option><option>15</option><option>20</"
+      "option><option>30</option><option>60</option>";
   options.replace(">" + minutes + "<", " selected>" + minutes + "<");
   form.replace("%OPTIONS%", options);
   form.replace("%REFRESH_DISPLAY%", String(minutesBetweenScrolling));
 
-  server.sendContent(form); //Send another chunk of the form
+  server.sendContent(form);  // Send another chunk of the form
 
   form = FPSTR(CHANGE_FORM3);
   String isUseSecurityChecked = "";
@@ -762,7 +794,7 @@ void handleConfigure() {
   form.replace("%USERID%", String(WEB_INTERFACE_USER));
   form.replace("%STATIONPASSWORD%", String(WEB_INTERFACE_PASS));
 
-  server.sendContent(form); // Send the second chunk of Data
+  server.sendContent(form);  // Send the second chunk of Data
 
   sendFooter();
 
@@ -784,10 +816,10 @@ void handleDisplay() {
 }
 
 //***********************************************************************
-void getUpdatedData() //client function to send/receive GET request data.
+void getUpdatedData()  // client function to send/receive GET request data.
 {
   digitalWrite(externalLight, LOW);
-  matrix.fillScreen(LOW); // show black
+  matrix.fillScreen(LOW);  // show black
 
   if (displayOn) {
     // only pull the weather data if display is on
@@ -808,15 +840,16 @@ void getUpdatedData() //client function to send/receive GET request data.
   }
 
   Serial.println("*GetUpdatedData(): Updating Time...");
-  //Update the Time
+  // Update the Time
   matrix.drawPixel(0, 4, HIGH);
   matrix.drawPixel(0, 3, HIGH);
   matrix.drawPixel(0, 2, HIGH);
   Serial.println("*GetUpdatedData(): Matrix Width:" + matrix.width());
   matrix.write();
-  TimeDB.updateConfig(TIMEDB_API_KEY, weatherClient.getLat(0), weatherClient.getLon(0));
-  time_t currentTime = TimeDB.getTime();
-  if(currentTime > 5000 || firstEpoch == 0) {
+  TimeDBclient.updateConfig(TIMEDB_API_KEY, weatherClient.getLat(0),
+                            weatherClient.getLon(0));
+  time_t currentTime = TimeDBclient.getTime();
+  if (currentTime > 5000 || firstEpoch == 0) {
     setTime(currentTime);
   } else {
     Serial.println("*GetUpdatedData(): Time update unsuccessful!");
@@ -837,7 +870,8 @@ void getUpdatedData() //client function to send/receive GET request data.
   }
 
   if (displayOn) {
-    bitcoinClient.updateBitcoinData(BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
+    bitcoinClient.updateBitcoinData(
+        BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   }
 
   Serial.println("*GetUpdatedData(): Version: " + String(VERSION));
@@ -876,25 +910,52 @@ void redirectHome() {
 void sendHeader() {
   String html = "<!DOCTYPE HTML>";
   html += "<html><head><title>Marquee Scroller</title>";
-  html += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />";
-  html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
-  html += "<link rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css'>";
-  html += "<link rel='stylesheet' href='https://www.w3schools.com/lib/w3-theme-blue-grey.css'>";
-  html += "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.1/css/all.min.css'>";
-  html += "<link href='data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAHjH8AP///wBI1FYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzMwAAABERAAMwAAAAARADAAAwAAAAABMwAzAAAAABEzADMCIAAAETAAAwIgAAABADMAAAAAEQADMzAAAAEREAAzAAAAABEAMAADAiAQAAEzADMCIBEAETMAMwAAEQARMwAzAAARABEwAAMAABAAAQAzAAAAABEAAzMwAAABERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' rel='icon' type='image/x-icon' />";
+  html +=
+      "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />";
+  html +=
+      "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+  html +=
+      "<link rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css'>";
+  html +=
+      "<link rel='stylesheet' "
+      "href='https://www.w3schools.com/lib/w3-theme-blue-grey.css'>";
+  html +=
+      "<link rel='stylesheet' "
+      "href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.1/css/"
+      "all.min.css'>";
+  html +=
+      "<link "
+      "href='data:image/"
+      "x-icon;base64,"
+      "AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAA"
+      "EAAAAAAAAAAAAAAAHjH8AP///"
+      "wBI1FYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "zMwAAABERAAMwAAAAARADAAAwAAAAABMwAzAAAAABEzADMCIAAAETAAAwIgAAABADMAAAAAE"
+      "QADMzAAAAEREAAzAAAAABEAMAADAiAQAAEzADMCIBEAETMAMwAAEQARMwAzAAARABEwAAMAA"
+      "BAAAQAzAAAAABEAAzMwAAABERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' rel='icon' type='image/x-icon' "
+      "/>";
   html += "</head><body>";
   server.sendContent(html);
-  html = "<nav class='w3-sidebar w3-bar-block w3-card' style='margin-top:88px' id='mySidebar'>";
+  html =
+      "<nav class='w3-sidebar w3-bar-block w3-card' style='margin-top:88px' "
+      "id='mySidebar'>";
   html += "<div class='w3-container w3-theme-d2'>";
-  html += "<span onclick='closeSidebar()' class='w3-button w3-display-topright w3-large'><i class='fas fa-times'></i></span>";
-  html += "<div class='w3-left'><img src='http://openweathermap.org/img/w/" + weatherClient.getIcon(0) + ".png' alt='" + weatherClient.getDescription(0) + "'></div>";
+  html +=
+      "<span onclick='closeSidebar()' class='w3-button w3-display-topright "
+      "w3-large'><i class='fas fa-times'></i></span>";
+  html += "<div class='w3-left'><img src='http://openweathermap.org/img/w/" +
+          weatherClient.getIcon(0) + ".png' alt='" +
+          weatherClient.getDescription(0) + "'></div>";
   html += "<div class='w3-padding'>Menu</div></div>";
   server.sendContent(html);
 
   server.sendContent(FPSTR(WEB_ACTIONS1));
   Serial.println("Displays: " + String(numberOfHorizontalDisplays));
   if (numberOfHorizontalDisplays >= 8) {
-    server.sendContent("<a class='w3-bar-item w3-button' href='/configurewideclock'><i class='far fa-clock'></i> Wide Clock</a>");
+    server.sendContent(
+        "<a class='w3-bar-item w3-button' href='/configurewideclock'><i "
+        "class='far fa-clock'></i> Wide Clock</a>");
   }
   server.sendContent(FPSTR(WEB_ACTIONS2));
   if (displayOn) {
@@ -905,9 +966,18 @@ void sendHeader() {
   server.sendContent(FPSTR(WEB_ACTION3));
 
   html = "</nav>";
-  html += "<header class='w3-top w3-bar w3-theme'><button class='w3-bar-item w3-button w3-xxxlarge w3-hover-theme' onclick='openSidebar()'><i class='fas fa-bars'></i></button><h2 class='w3-bar-item'>Weather Marquee</h2></header>";
+  html +=
+      "<header class='w3-top w3-bar w3-theme'><button class='w3-bar-item "
+      "w3-button w3-xxxlarge w3-hover-theme' onclick='openSidebar()'><i "
+      "class='fas fa-bars'></i></button><h2 class='w3-bar-item'>Weather "
+      "Marquee</h2></header>";
   html += "<script>";
-  html += "function openSidebar(){document.getElementById('mySidebar').style.display='block'}function closeSidebar(){document.getElementById('mySidebar').style.display='none'}closeSidebar();";
+  html +=
+      "function "
+      "openSidebar(){document.getElementById('mySidebar').style.display='block'"
+      "}function "
+      "closeSidebar(){document.getElementById('mySidebar').style.display='none'"
+      "}closeSidebar();";
   html += "</script>";
   html += "<br><div class='w3-container w3-large' style='margin-top:88px'>";
   server.sendContent(html);
@@ -921,8 +991,10 @@ void sendFooter() {
   String html = "<br><br><br>";
   html += "</div>";
   html += "<footer class='w3-container w3-bottom w3-theme w3-margin-top'>";
-  html += "<i class='far fa-paper-plane'></i> Version: " + String(VERSION) + "<br>";
-  html += "<i class='far fa-clock'></i> Next Update: " + getTimeTillUpdate() + "<br>";
+  html +=
+      "<i class='far fa-paper-plane'></i> Version: " + String(VERSION) + "<br>";
+  html += "<i class='far fa-clock'></i> Next Update: " + getTimeTillUpdate() +
+          "<br>";
   html += "<i class='fas fa-rss'></i> Signal Strength: ";
   html += String(rssi) + "%";
   html += "</footer>";
@@ -944,14 +1016,17 @@ void displayWeatherData() {
   String temperature = weatherClient.getTemp(0);
   String feels_like = weatherClient.getFeelsLike(0);
 
-  // if ((temperature.indexOf(".") != -1) && (temperature.length() >= (temperature.indexOf(".") + 2))) {
+  // if ((temperature.indexOf(".") != -1) && (temperature.length() >=
+  // (temperature.indexOf(".") + 2))) {
   //   temperature.remove(temperature.indexOf(".") + 2);
   // }
 
-  Serial.println("debug-temperature: " + temperature); // debug
-  Serial.println("debug-feels_like: " + feels_like); // debug
+  Serial.println("debug-temperature: " + temperature);  // debug
+  Serial.println("debug-feels_like: " + feels_like);    // debug
 
-  String time = TimeDB.getDayName() + ", " + TimeDB.getMonthName() + " " + day() + ", " + hourFormat12() + ":" + TimeDB.zeroPad(minute()) + " " + TimeDB.getAmPm();
+  String time = TimeDBclient.getDayName() + ", " + TimeDBclient.getMonthName() +
+                " " + day() + ", " + hourFormat12() + ":" +
+                TimeDBclient.zeroPad(minute()) + " " + TimeDBclient.getAmPm();
 
   Serial.println(weatherClient.getCity(0));
   Serial.println(weatherClient.getCondition(0));
@@ -966,35 +1041,50 @@ void displayWeatherData() {
   if (weatherClient.getCity(0) == "") {
     html += "<p>Please <a href='/configure'>Configure Weather</a> API</p>";
     if (weatherClient.getError() != "") {
-      html += "<p>Weather Error: <strong>" + weatherClient.getError() + "</strong></p>";
+      html += "<p>Weather Error: <strong>" + weatherClient.getError() +
+              "</strong></p>";
     }
   } else {
-    html += "<div class='w3-cell-row' style='width:100%; text-align:center'><h2>" + weatherClient.getCity(0) + ", " + weatherClient.getCountry(0) + "</h2></div><div class='w3-cell-row'>";
-    html += "<div class='w3-cell w3-container' style='width:50%; text-align:right'>";
-    html += "<img src='http://openweathermap.org/img/w/" + weatherClient.getIcon(0) + ".png' alt='" + weatherClient.getDescription(0) + "'><br>";
+    html +=
+        "<div class='w3-cell-row' style='width:100%; text-align:center'><h2>" +
+        weatherClient.getCity(0) + ", " + weatherClient.getCountry(0) +
+        "</h2></div><div class='w3-cell-row'>";
+    html +=
+        "<div class='w3-cell w3-container' style='width:50%; "
+        "text-align:right'>";
+    html += "<img src='http://openweathermap.org/img/w/" +
+            weatherClient.getIcon(0) + ".png' alt='" +
+            weatherClient.getDescription(0) + "'><br>";
     html += weatherClient.getHumidity(0) + "% Humidity<br>";
-    html += weatherClient.getDirectionText(0) + " / " + weatherClient.getWind(0) + " <span class='w3-tiny'>" + getSpeedSymbol() + "</span> Wind<br>";
-    html += weatherClient.getPressure(0) + " <span class='w3-tiny'>" + getPressureSymbol() + "</span> Pressure<br>";
+    html += weatherClient.getDirectionText(0) + " / " +
+            weatherClient.getWind(0) + " <span class='w3-tiny'>" +
+            getSpeedSymbol() + "</span> Wind<br>";
+    html += weatherClient.getPressure(0) + " <span class='w3-tiny'>" +
+            getPressureSymbol() + "</span> Pressure<br>";
     html += "</div>";
     html += "<div class='w3-cell w3-container' style='width:50%'><p>";
-    html += weatherClient.getCondition(0) + " (" + weatherClient.getDescription(0) + ")<br>";
+    html += weatherClient.getCondition(0) + " (" +
+            weatherClient.getDescription(0) + ")<br>";
     html += "Temperature: " + temperature + " " + getTempSymbolWeb() + "<br>";
     html += "Feels like: " + feels_like + " " + getTempSymbolWeb() + "<br>";
-    html += weatherClient.getHigh(0) + "/" + weatherClient.getLow(0) + " " + getTempSymbolWeb() + "<br>";
+    html += weatherClient.getHigh(0) + "/" + weatherClient.getLow(0) + " " +
+            getTempSymbolWeb() + "<br>";
     html += time + "<br>";
-    html += "<a href='https://www.google.com/maps/@" + weatherClient.getLat(0) + "," + weatherClient.getLon(0) + ",10000m/data=!3m1!1e3' target='_BLANK'><i class='fas fa-map-marker' style='color:red'></i> Map It!</a><br>";
+    html += "<a href='https://www.google.com/maps/@" + weatherClient.getLat(0) +
+            "," + weatherClient.getLon(0) +
+            ",10000m/data=!3m1!1e3' target='_BLANK'><i class='fas "
+            "fa-map-marker' style='color:red'></i> Map It!</a><br>";
     html += "</p></div></div><hr>";
   }
 
-
-  server.sendContent(String(html)); // spit out what we got
-  html = ""; // fresh start
-
+  server.sendContent(String(html));  // spit out what we got
+  html = "";                         // fresh start
 
   if (OCTOPRINT_ENABLED) {
     html = "<div class='w3-cell-row'>OctoPrint Status: ";
     if (printerClient.isPrinting()) {
-      html += printerClient.getState() + " " + printerClient.getFileName() + " (" + printerClient.getProgressCompletion() + "%)";
+      html += printerClient.getState() + " " + printerClient.getFileName() +
+              " (" + printerClient.getProgressCompletion() + "%)";
     } else if (printerClient.isOperational()) {
       html += printerClient.getState();
     } else if (printerClient.getError() != "") {
@@ -1008,23 +1098,40 @@ void displayWeatherData() {
   }
 
   if (BC_CODE != "NONE" && BC_CODE != "") {
-    html = "<div class='w3-cell-row'>Bitcoin value: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode() + "</div><br><hr>";
+    html =
+        "<div class='w3-cell-row'>Bitcoin value: " + bitcoinClient.getRate() +
+        " " + bitcoinClient.getCode() + "</div><br><hr>";
     server.sendContent(String(html));
     html = "";
   }
 
   if (PIHOLE_ENABLED) {
     if (piholeClient.getError() == "") {
-      html = "<div class='w3-cell-row'><b>Pi-hole</b><br>"
-             "Total Queries (" + piholeClient.getUniqueClients() + " clients): <b>" + piholeClient.getDnsQueriesToday() + "</b><br>"
-             "Queries Blocked: <b>" + piholeClient.getAdsBlockedToday() + "</b><br>"
-             "Percent Blocked: <b>" + piholeClient.getAdsPercentageToday() + "%</b><br>"
-             "Domains on Blocklist: <b>" + piholeClient.getDomainsBeingBlocked() + "</b><br>"
-             "Status: <b>" + piholeClient.getPiHoleStatus() + "</b><br>"
-             "</div><br><hr>";
+      html =
+          "<div class='w3-cell-row'><b>Pi-hole</b><br>"
+          "Total Queries (" +
+          piholeClient.getUniqueClients() + " clients): <b>" +
+          piholeClient.getDnsQueriesToday() +
+          "</b><br>"
+          "Queries Blocked: <b>" +
+          piholeClient.getAdsBlockedToday() +
+          "</b><br>"
+          "Percent Blocked: <b>" +
+          piholeClient.getAdsPercentageToday() +
+          "%</b><br>"
+          "Domains on Blocklist: <b>" +
+          piholeClient.getDomainsBeingBlocked() +
+          "</b><br>"
+          "Status: <b>" +
+          piholeClient.getPiHoleStatus() +
+          "</b><br>"
+          "</div><br><hr>";
     } else {
       html = "<div class='w3-cell-row'>Pi-hole Error";
-      html += "Please <a href='/configurepihole' title='Configure'>Configure</a> for Pi-hole <a href='/configurepihole' title='Configure'><i class='fas fa-cog'></i></a><br>";
+      html +=
+          "Please <a href='/configurepihole' title='Configure'>Configure</a> "
+          "for Pi-hole <a href='/configurepihole' title='Configure'><i "
+          "class='fas fa-cog'></i></a><br>";
       html += "Status: Error Getting Data<br>";
       html += "Reason: " + piholeClient.getError() + "<br></div><br><hr>";
     }
@@ -1033,14 +1140,16 @@ void displayWeatherData() {
   }
 
   if (NEWS_ENABLED) {
-    html = "<div class='w3-cell-row' style='width:100%'><h2>News (" + NEWS_SOURCE + ")</h2></div>";
+    html = "<div class='w3-cell-row' style='width:100%'><h2>News (" +
+           NEWS_SOURCE + ")</h2></div>";
     if (newsClient.getTitle(0) == "") {
       html += "<p>Please <a href='/configurenews'>Configure News</a> API</p>";
       server.sendContent(html);
       html = "";
     } else {
       for (int inx = 0; inx < 10; inx++) {
-        html = "<div class='w3-cell-row'><a href='" + newsClient.getUrl(inx) + "' target='_BLANK'>" + newsClient.getTitle(inx) + "</a></div>";
+        html = "<div class='w3-cell-row'><a href='" + newsClient.getUrl(inx) +
+               "' target='_BLANK'>" + newsClient.getTitle(inx) + "</a></div>";
         html += newsClient.getDescription(inx) + "<br/><br/>";
         server.sendContent(html);
         html = "";
@@ -1054,14 +1163,15 @@ void displayWeatherData() {
   digitalWrite(externalLight, HIGH);
 }
 
-void configModeCallback (WiFiManager *myWiFiManager) {
+void configModeCallback(WiFiManager *myWiFiManager) {
   Serial.println("Entered config mode");
   Serial.println(WiFi.softAPIP());
   Serial.println("Wifi Manager");
   Serial.println("Please connect to AP");
   Serial.println(myWiFiManager->getConfigPortalSSID());
   Serial.println("To setup Wifi Configuration");
-  scrollMessage("Please Connect to AP: " + String(myWiFiManager->getConfigPortalSSID()));
+  scrollMessage("Please Connect to AP: " +
+                String(myWiFiManager->getConfigPortalSSID()));
   centerPrint("wifi");
 }
 
@@ -1079,7 +1189,7 @@ void flashLED(int number, int delayTime) {
 
 String getTempSymbol() {
   String degSymbol = String((char)247);
-  return (IS_METRIC ? degSymbol+"C" : degSymbol+"F");
+  return (IS_METRIC ? degSymbol + "C" : degSymbol + "F");
 }
 
 String getTempSymbolWeb() {
@@ -1094,11 +1204,9 @@ String getSpeedSymbol() {
   return rtnValue;
 }
 
-String getPressureSymbol()
-{
+String getPressureSymbol() {
   String rtnValue = "";
-  if (IS_METRIC)
-  {
+  if (IS_METRIC) {
     rtnValue = "mb";
   }
   return rtnValue;
@@ -1152,12 +1260,13 @@ void enableDisplay(boolean enable) {
   displayOn = enable;
   if (enable) {
     if (getMinutesFromLastDisplay() >= minutesBetweenDataRefresh) {
-      // The display has been off longer than the minutes between refresh -- need to get fresh data
-      lastEpoch = 0; // this should force a data pull of the weather
+      // The display has been off longer than the minutes between refresh --
+      // need to get fresh data
+      lastEpoch = 0;        // this should force a data pull of the weather
       displayOffEpoch = 0;  // reset
     }
     matrix.shutdown(false);
-    matrix.fillScreen(LOW); // show black
+    matrix.fillScreen(LOW);  // show black
     Serial.println("Display was turned ON: " + now());
   } else {
     matrix.shutdown(true);
@@ -1169,9 +1278,10 @@ void enableDisplay(boolean enable) {
 // Toggle on and off the display if user defined times
 void checkDisplay() {
   if (TIME_TO_DISPLAY_ON == "" || TIME_TO_DISPLAY_OFF == "") {
-    return; // nothing to do
+    return;  // nothing to do
   }
-  String currentTime = TimeDB.zeroPad(hour()) + ":" + TimeDB.zeroPad(minute());
+  String currentTime =
+      TimeDBclient.zeroPad(hour()) + ":" + TimeDBclient.zeroPad(minute());
 
   if (currentTime == TIME_TO_DISPLAY_ON && !displayOn) {
     Serial.println("Time to turn display on: " + currentTime);
@@ -1252,7 +1362,9 @@ bool writeConfigJson() {
   weatherClient.updateWeatherApiKey(WEATHER_API_KEY);
   weatherClient.setMetric(IS_METRIC);
   weatherClient.updateCityIdList(CityIDs, 1);
-  printerClient.updateOctoPrintClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER, OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
+  printerClient.updateOctoPrintClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER,
+                                      OCTOPRINT_PORT, OCTOPRINT_USER,
+                                      OCTOPRINT_PASS);
   return true;
 }
 
@@ -1262,98 +1374,102 @@ bool readConfigJson() {
     writeConfigJson();
   }
   File f = LittleFS.open(CONFIG_JSON, "r");
-  
+
   // const size_t capacity = 2048;
   // DynamicJsonDocument doc(capacity);
 
   DeserializationError error = deserializeJson(doc, f);
   if (error)
     Serial.println(F("Failed to read JSON file"));
-  
+
   serializeJsonPretty(doc, Serial);
   Serial.println();
   f.close();
 
-  TIMEDB_API_KEY = (const char*)doc["TIMEDB_API_KEY"]; 
-  USER_MESSAGE = (const char*)doc["USER_MESSAGE"]; 
-  NEWS_SOURCE = (const char*)doc["NEWS_SOURCE"]; 
-  TIME_TO_DISPLAY_ON = (const char*)doc["TIME_TO_DISPLAY_ON"]; 
-  TIME_TO_DISPLAY_OFF = (const char*)doc["TIME_TO_DISPLAY_OFF"]; 
-  LED_BRIGHTNESS = doc["ledIntensity"]; 
-  SCROLLING_SPEED = doc["scrollSpeed"]; 
-  
-  NEWS_ENABLED = doc["NEWS"]["ENABLED"]; 
-  NEWS_API_KEY = (const char*)doc["NEWS"]["API_KEY"];
-  NEWS_SOURCE = (const char*)doc["NEWS"]["SOURCE"]; 
+  TIMEDB_API_KEY = (const char *)doc["TIMEDB_API_KEY"];
+  USER_MESSAGE = (const char *)doc["USER_MESSAGE"];
+  NEWS_SOURCE = (const char *)doc["NEWS_SOURCE"];
+  TIME_TO_DISPLAY_ON = (const char *)doc["TIME_TO_DISPLAY_ON"];
+  TIME_TO_DISPLAY_OFF = (const char *)doc["TIME_TO_DISPLAY_OFF"];
+  LED_BRIGHTNESS = doc["ledIntensity"];
+  SCROLLING_SPEED = doc["scrollSpeed"];
 
-  IS_DOTS_BLINKING = doc["IS_DOTS_BLINKING"]; 
-  IS_24HOUR = doc["IS_24HOUR"]; 
-  IS_PM = doc["IS_PM"]; 
-  Wide_Clock_Style = (const char*)doc["wideclockformat"]; 
-  IS_METRIC = doc["isMetric"]; 
-  minutesBetweenDataRefresh = doc["refreshRate"]; 
+  NEWS_ENABLED = doc["NEWS"]["ENABLED"];
+  NEWS_API_KEY = (const char *)doc["NEWS"]["API_KEY"];
+  NEWS_SOURCE = (const char *)doc["NEWS"]["SOURCE"];
+
+  IS_DOTS_BLINKING = doc["IS_DOTS_BLINKING"];
+  IS_24HOUR = doc["IS_24HOUR"];
+  IS_PM = doc["IS_PM"];
+  Wide_Clock_Style = (const char *)doc["wideclockformat"];
+  IS_METRIC = doc["isMetric"];
+  minutesBetweenDataRefresh = doc["refreshRate"];
   minutesBetweenScrolling = doc["minutesBetweenScrolling"];
 
-  OCTOPRINT_ENABLED = doc["OCTOPRINT"]["ENABLED"]; 
-  OCTOPRINT_PROGRESS = doc["OCTOPRINT"]["PROGRESS"]; 
-  OCTOPRINT_API_KEY = (const char*)doc["OCTOPRINT"]["KEY"]; 
-  OCTOPRINT_SERVER = (const char*)doc["OCTOPRINT"]["SERVER"]; 
-  OCTOPRINT_PORT = doc["OCTOPRINT"]["PORT"]; 
-  OCTOPRINT_USER = (const char*)doc["OCTOPRINT"]["USER"]; 
-  OCTOPRINT_PASS = (const char*)doc["OCTOPRINT"]["PASS"]; 
+  OCTOPRINT_ENABLED = doc["OCTOPRINT"]["ENABLED"];
+  OCTOPRINT_PROGRESS = doc["OCTOPRINT"]["PROGRESS"];
+  OCTOPRINT_API_KEY = (const char *)doc["OCTOPRINT"]["KEY"];
+  OCTOPRINT_SERVER = (const char *)doc["OCTOPRINT"]["SERVER"];
+  OCTOPRINT_PORT = doc["OCTOPRINT"]["PORT"];
+  OCTOPRINT_USER = (const char *)doc["OCTOPRINT"]["USER"];
+  OCTOPRINT_PASS = (const char *)doc["OCTOPRINT"]["PASS"];
 
   WEB_INTERFACE_AUTH_ENABLED = doc["WEB_INTERFACE"]["AUTH_ENABLED"];
-  WEB_INTERFACE_USER = (const char*)doc["WEB_INTERFACE"]["USER"]; 
-  WEB_INTERFACE_PASS = (const char*)doc["WEB_INTERFACE"]["PASS"]; 
+  WEB_INTERFACE_USER = (const char *)doc["WEB_INTERFACE"]["USER"];
+  WEB_INTERFACE_PASS = (const char *)doc["WEB_INTERFACE"]["PASS"];
 
-  BC_CODE = (const char*)doc["BC_CODE"]; 
+  BC_CODE = (const char *)doc["BC_CODE"];
 
-  WEATHER_API_KEY = (const char*)doc["WEATHER"]["API_KEY"]; 
-  CityIDs[0] = doc["WEATHER"]["CITY_ID"]; 
-  WEATHER_CITY = doc["WEATHER"]["CITY_NAME"]; 
-  WEATHER_CONDITION = doc["WEATHER"]["CONDITION"]; 
-  WEATHER_HUMIDITY = doc["WEATHER"]["HUMIDITY"]; 
-  WEATHER_WIND = doc["WEATHER"]["WIND"]; 
-  WEATHER_PRESSURE = doc["WEATHER"]["PRESSURE"]; 
-  WEATHER_HIGHLOW = doc["WEATHER"]["HIGHLOW"]; 
-  WEATHER_FEELSLIKE = doc["WEATHER"]["FEELSLIKE"]; 
-  WEATHER_DATE = doc["WEATHER"]["DATE"]; 
+  WEATHER_API_KEY = (const char *)doc["WEATHER"]["API_KEY"];
+  CityIDs[0] = doc["WEATHER"]["CITY_ID"];
+  WEATHER_CITY = doc["WEATHER"]["CITY_NAME"];
+  WEATHER_CONDITION = doc["WEATHER"]["CONDITION"];
+  WEATHER_HUMIDITY = doc["WEATHER"]["HUMIDITY"];
+  WEATHER_WIND = doc["WEATHER"]["WIND"];
+  WEATHER_PRESSURE = doc["WEATHER"]["PRESSURE"];
+  WEATHER_HIGHLOW = doc["WEATHER"]["HIGHLOW"];
+  WEATHER_FEELSLIKE = doc["WEATHER"]["FEELSLIKE"];
+  WEATHER_DATE = doc["WEATHER"]["DATE"];
 
-  PIHOLE_ENABLED = doc["PIHOLE"]["ENABLED"]; 
-  PIHOLE_SERVER = (const char*)doc["PIHOLE"]["SERVER"]; 
-  PIHOLE_PORT = doc["PIHOLE"]["PORT"]; 
+  PIHOLE_ENABLED = doc["PIHOLE"]["ENABLED"];
+  PIHOLE_SERVER = (const char *)doc["PIHOLE"]["SERVER"];
+  PIHOLE_PORT = doc["PIHOLE"]["PORT"];
 
   matrix.setIntensity(LED_BRIGHTNESS);
-  //debug
-  Serial.println("NEWS_API_KEY: " + NEWS_API_KEY + " --- NEWS_SOURCE:" + NEWS_SOURCE);
+  // debug
+  Serial.println("NEWS_API_KEY: " + NEWS_API_KEY +
+                 " --- NEWS_SOURCE:" + NEWS_SOURCE);
   ///
   newsClient.updateNewsClient(NEWS_API_KEY, NEWS_SOURCE);
   weatherClient.updateWeatherApiKey(WEATHER_API_KEY);
   weatherClient.setMetric(IS_METRIC);
   weatherClient.updateCityIdList(CityIDs, 1);
-  printerClient.updateOctoPrintClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER, OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
+  printerClient.updateOctoPrintClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER,
+                                      OCTOPRINT_PORT, OCTOPRINT_USER,
+                                      OCTOPRINT_PASS);
   return true;
 }
 
 void scrollMessage(String msg) {
-  msg += " "; // add a space at the end
-  for ( int i = 0 ; i < width * msg.length() + matrix.width() - 1 - spacer; i++ ) {
+  msg += " ";  // add a space at the end
+  for (int i = 0; i < width * msg.length() + matrix.width() - 1 - spacer; i++) {
     if (WEBSERVER_ENABLED) {
       server.handleClient();
     }
     if (ENABLE_OTA) {
       ArduinoOTA.handle();
     }
-    if (refresh == 1) i = 0;
+    if (refresh == 1)
+      i = 0;
     refresh = 0;
     matrix.fillScreen(LOW);
 
     int letter = i / width;
     int x = (matrix.width() - 1) - i % width;
-    int y = (matrix.height() - 8) / 2; // center the text vertically
+    int y = (matrix.height() - 8) / 2;  // center the text vertically
 
-    while ( x + width - spacer >= 0 && letter >= 0 ) {
-      if ( letter < msg.length() ) {
+    while (x + width - spacer >= 0 && letter >= 0) {
+      if (letter < msg.length()) {
         matrix.drawChar(x, y, msg[letter], HIGH, LOW, 1);
       }
 
@@ -1361,7 +1477,7 @@ void scrollMessage(String msg) {
       x -= width;
     }
 
-    matrix.write(); // Send bitmap to display
+    matrix.write();  // Send bitmap to display
     delay(SCROLLING_SPEED);
   }
   matrix.setCursor(0, 0);
@@ -1377,7 +1493,7 @@ void drawPiholeGraph() {
   int yval = 0;
 
   int totalRows = count - matrix.width();
-  
+
   if (totalRows < 0) {
     totalRows = 0;
   }
@@ -1390,12 +1506,13 @@ void drawPiholeGraph() {
   }
 
   int currentVal = 0;
-  for (int inx = (count-1); inx >= totalRows; inx--) {
+  for (int inx = (count - 1); inx >= totalRows; inx--) {
     currentVal = (int)piholeClient.getBlockedAds()[inx];
     yval = map(currentVal, 0, high, 7, 0);
-    //Serial.println("Value: " + String(currentVal));
-    //Serial.println("x: " + String(row) + " y:" + String(yval) + " h:" + String(8-yval));
-    matrix.drawFastVLine(row, yval, 8-yval, HIGH);
+    // Serial.println("Value: " + String(currentVal));
+    // Serial.println("x: " + String(row) + " y:" + String(yval) + " h:" +
+    // String(8-yval));
+    matrix.drawFastVLine(row, yval, 8 - yval, HIGH);
     if (row == 0) {
       break;
     }
@@ -1423,12 +1540,13 @@ void centerPrint(String msg, boolean extraStuff) {
     }
 
     if (OCTOPRINT_ENABLED && OCTOPRINT_PROGRESS && printerClient.isPrinting()) {
-      int numberOfLightPixels = (printerClient.getProgressCompletion().toFloat() / float(100)) * (matrix.width() - 1);
+      int numberOfLightPixels =
+          (printerClient.getProgressCompletion().toFloat() / float(100)) *
+          (matrix.width() - 1);
       matrix.drawFastHLine(0, 7, numberOfLightPixels, HIGH);
     }
-    
   }
-  
+
   matrix.setCursor(x, 0);
   matrix.print(msg);
   matrix.write();
@@ -1436,7 +1554,8 @@ void centerPrint(String msg, boolean extraStuff) {
 
 String decodeHtmlString(String msg) {
   String decodedMsg = msg;
-  // Restore special characters that are misformed to %char by the client browser
+  // Restore special characters that are misformed to %char by the client
+  // browser
   decodedMsg.replace("+", " ");
   decodedMsg.replace("%21", "!");
   decodedMsg.replace("%22", "");

@@ -22,21 +22,19 @@ SOFTWARE.
 */
 
 #pragma once
-#include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266WiFi.h>
 
 class PiHoleClient {
-
-private:
-
+ private:
   WiFiClient getSubmitRequest(String apiGetData, String myServer, int myPort);
   void resetClientsBlocked();
   void resetBlockedGraphData();
-  
+
   String errorMessage = "";
 
-  int blocked[144] = {0};  
+  int blocked[144] = {0};
   int blockedCount = 0;
   int blockedHigh = 0;
 
@@ -65,11 +63,10 @@ private:
     String privacy_level;
     String piHoleStatus;
   } phd;
-  
+
   phd piHoleData;
-  
-  
-public:
+
+ public:
   PiHoleClient();
   void getPiHoleData(String server, int port);
   void getGraphData(String server, int port);
@@ -84,19 +81,19 @@ public:
   /*
   String getUniqueDomains();
   String getQueriesForwarded();
-  String getQueriesCached();  
+  String getQueriesCached();
   String getDnsQueriesAllTypes();
   String getReplyNODATA();
   String getReplyNXDOMAIN();
   String getReplyCNAME();
   String getReplyIP();
   String getPrivacyLevel();
-  
+
   */
   String getPiHoleStatus();
   String getError();
 
-  int *getBlockedAds();  
+  int *getBlockedAds();
   int getBlockedCount();
   int getBlockedHigh();
 

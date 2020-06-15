@@ -22,17 +22,17 @@ SOFTWARE.
 */
 
 #pragma once
-#include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
+#include <ESP8266WiFi.h>
 
 class OpenWeatherMapClient {
-
-private:
+ private:
   String myCityIDs = "";
   String myApiKey = "";
   String units = "";
-  
-  const char* servername = "api.openweathermap.org";  // remote server we will connect to
+
+  const char* servername =
+      "api.openweathermap.org";  // remote server we will connect to
 
   typedef struct {
     String lat;
@@ -60,9 +60,10 @@ private:
   weather weathers[5];
 
   String roundValue(String value);
-  
-public:
-  OpenWeatherMapClient(String ApiKey, int CityIDs[], int cityCount, boolean isMetric);
+
+ public:
+  OpenWeatherMapClient(String ApiKey, int CityIDs[], int cityCount,
+                       boolean isMetric);
   void updateWeather();
   void updateWeatherApiKey(String ApiKey);
   void updateCityIdList(int CityIDs[], int cityCount);

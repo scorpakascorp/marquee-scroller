@@ -23,45 +23,47 @@ SOFTWARE.
 
 #include "TimeDB.h"
 
-TimeDB::TimeDB(String apiKey)
-{
+TimeDB::TimeDB(String apiKey) {
   myApiKey = apiKey;
 }
 
-void TimeDB::updateConfig(String apiKey, String lat, String lon)
-{
+void TimeDB::updateConfig(String apiKey, String lat, String lon) {
   myApiKey = apiKey;
   myLat = lat;
   myLon = lon;
 }
 
-time_t TimeDB::getTime()
-{
+time_t TimeDB::getTime() {
   WiFiClient client;
-  String apiGetData = "GET /v2.1/get-time-zone?key=" + myApiKey + "&format=json&by=position&lat=" + myLat + "&lng=" + myLon + " HTTP/1.1";
+  String apiGetData = "GET /v2.1/get-time-zone?key=" + myApiKey +
+                      "&format=json&by=position&lat=" + myLat +
+                      "&lng=" + myLon + " HTTP/1.1";
   Serial.println("*TDB: Getting Time Data for " + myLat + "," + myLon);
   Serial.println("*TDB: " + apiGetData);
   String result = "";
-  if (client.connect(servername, 80)) {  //starts client connection, checks for connection
+  if (client.connect(servername,
+                     80)) {  // starts client connection, checks for connection
     client.println(apiGetData);
     client.println("Host: " + String(servername));
     client.println("User-Agent: ArduinoWiFi/1.1");
     client.println("Connection: close");
     client.println();
-  }
-  else {
-    Serial.println("*TDB: Connection for time data failed"); //error message if no client connect
+  } else {
+    Serial.println(
+        "*TDB: Connection for time data failed");  // error message if no client
+                                                   // connect
     Serial.println();
     return 20;
   }
 
-  while (client.connected() && !client.available()) delay(1); //waits for data
+  while (client.connected() && !client.available()) delay(1);  // waits for data
 
   Serial.println("*TDB: Waiting for data");
 
   boolean record = false;
-  while (client.connected() || client.available()) { //connected or data available
-    char c = client.read(); //gets byte from ethernet buffer
+  while (client.connected() ||
+         client.available()) {  // connected or data available
+    char c = client.read();     // gets byte from ethernet buffer
     if (String(c) == "{") {
       record = true;
     }
@@ -72,13 +74,13 @@ time_t TimeDB::getTime()
       record = false;
     }
   }
-  client.stop(); //stop client
+  client.stop();  // stop client
   Serial.println("*TDB: " + result);
 
-  char jsonArray [result.length() + 1];
+  char jsonArray[result.length() + 1];
   result.toCharArray(jsonArray, sizeof(jsonArray));
   jsonArray[result.length() + 1] = '\0';
-  
+
   const size_t capacity = JSON_OBJECT_SIZE(13) + 220;
   DynamicJsonDocument doc(capacity);
   DeserializationError error = deserializeJson(doc, jsonArray);
@@ -93,7 +95,7 @@ time_t TimeDB::getTime()
   if (doc["timestamp"] == 0) {
     return 20;
   } else {
-    return (unsigned long) doc["timestamp"];
+    return (unsigned long)doc["timestamp"];
   }
 }
 
@@ -170,7 +172,6 @@ String TimeDB::getMonthName() {
   return rtnValue;
 }
 
-
 String TimeDB::getAmPm() {
   String ampmValue = "AM";
   if (isPM()) {
@@ -186,4 +187,3 @@ String TimeDB::zeroPad(int number) {
     return String(number);
   }
 }
-

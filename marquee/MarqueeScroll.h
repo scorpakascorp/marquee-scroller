@@ -2,28 +2,27 @@
 #define MARQUEESCROLL_H
 #pragma once
 
+#include <Adafruit_GFX.h>  // --> https://github.com/adafruit/Adafruit-GFX-Library
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
-#include <WiFiManager.h> // --> https://github.com/tzapu/WiFiManager
-#include <ESP8266mDNS.h>
-#include <ArduinoOTA.h>
-#include <LittleFS.h>
-#include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h> // --> https://github.com/adafruit/Adafruit-GFX-Library
-#include <Max72xxPanel.h> // --> https://github.com/markruys/arduino-Max72xxPanel
 #include <ArduinoJson.h>
+#include <ArduinoOTA.h>
+#include <ESP8266HTTPUpdateServer.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#include <LittleFS.h>
+#include <Max72xxPanel.h>  // --> https://github.com/markruys/arduino-Max72xxPanel
+#include <SPI.h>
+#include <WiFiManager.h>  // --> https://github.com/tzapu/WiFiManager
+#include <Wire.h>
 
-#include "OpenWeatherMapClient.h"
-#include "TimeDB.h"
+#include "BitcoinApiClient.h"
 #include "NewsApiClient.h"
 #include "OctoPrintClient.h"
-#include "BitcoinApiClient.h"
+#include "OpenWeatherMapClient.h"
 #include "PiHoleClient.h"
-
 #include "Settings.h"
+#include "TimeDB.h"
 
 boolean athentication();
 void centerPrint(String msg, boolean extraStuff = false);
@@ -70,7 +69,7 @@ void sendHeader();
 bool writeConfigJson();
 bool readConfigJson();
 
-//declairing prototypes
+// declairing prototypes
 void configModeCallback(WiFiManager *myWiFiManager);
 int8_t getWifiQuality();
 
@@ -78,15 +77,17 @@ int8_t getWifiQuality();
 const int offset = 1;
 int refresh = 0;
 String message = "hello";
-int spacer = 1;         // dots between letters
-int width = 5 + spacer; // The font width is 5 pixels + spacer
-Max72xxPanel matrix = Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
-String Wide_Clock_Style = "1"; //1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
-float UtcOffset;               //time zone offsets that correspond with the CityID above (offset from GMT)
+int spacer = 1;          // dots between letters
+int width = 5 + spacer;  // The font width is 5 pixels + spacer
+Max72xxPanel matrix =
+    Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
+String Wide_Clock_Style = "1";  // 1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
+float UtcOffset;  // time zone offsets that correspond with the CityID above
+                  // (offset from GMT)
 const String scrollSpacer = " --- ";
 
 // Time
-TimeDB TimeDB("");
+TimeDB TimeDBclient("");
 String lastMinute = "xx";
 int displayRefreshCount = 1;
 long lastEpoch = 0;
@@ -102,7 +103,8 @@ int newsIndex = 0;
 OpenWeatherMapClient weatherClient(WEATHER_API_KEY, CityIDs, 1, IS_METRIC);
 
 // OctoPrint Client
-OctoPrintClient printerClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER, OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
+OctoPrintClient printerClient(OCTOPRINT_API_KEY, OCTOPRINT_SERVER,
+                              OCTOPRINT_PORT, OCTOPRINT_USER, OCTOPRINT_PASS);
 int printerCount = 0;
 
 // Pi-hole Client
@@ -176,7 +178,10 @@ static const char CHANGE_FORM3[] PROGMEM = R"=====(
   <p><label>Marquee User ID (for this web interface)</label><input class='w3-input w3-border w3-margin-bottom' type='text' name='userid' value='%USERID%' maxlength='20'></p>
   <p><label>Marquee Password </label><input class='w3-input w3-border w3-margin-bottom' type='password' name='stationpassword' value='%STATIONPASSWORD%'></p>
   <p><button class='w3-button w3-block w3-green w3-section w3-padding' type='submit'>Save</button></p></form>
-  <script>function isNumberKey(e){var h=e.which?e.which:event.keyCode;return!(h>31&&(h<48||h>57))}</script>
+  <script>function isNumberKey(e){
+  var h = e.which ? e.which : event.keyCode;
+  return !(h > 31 && (h < 48 || h > 57))
+}</script>
 )=====";
 
 static const char BITCOIN_FORM[] PROGMEM = R"=====(
@@ -210,7 +215,9 @@ static const char PIHOLE_FORM[] PROGMEM = R"=====(
   <label>Pi-hole Port</label><input class='w3-input w3-border w3-margin-bottom' type='text' name='piholePort' id= 'piholePort' value='%PIHOLEPORT%' maxlength='5'  onkeypress='return isNumberKey(event)'>
   <input type='button' value='Test Connection and JSON Response' onclick='testPiHole()'><p id='PiHoleTest'></p>
   <button class='w3-button w3-block w3-green w3-section w3-padding' type='submit'>Save</button></form>
-  <script>function isNumberKey(e){var h=e.which?e.which:event.keyCode;return!(h>31&&(h<48||h>57))}</script>
+  <script>function isNumberKey(e){
+  var h = e.which ? e.which : event.keyCode;
+  return !(h > 31 && (h < 48 || h > 57))}</script>
 )=====";
 
 static const char PIHOLE_TEST[] PROGMEM = R"=====(
@@ -227,9 +234,22 @@ static const char NEWS_FORM1[] PROGMEM = R"=====(
   <input class='w3-input w3-border w3-margin-bottom' type='text' name='NEWS_API_KEY' value='%NEWS_API_KEY%' maxlength='60'>
   <p>Select News Source <select class='w3-option w3-padding' name='newssource' id='newssource'></select></p>
   <script>var s='%NEWS_SOURCE%';var tt;var xmlhttp=new XMLHttpRequest();xmlhttp.open('GET','https://raw.githubusercontent.com/Qrome/marquee-scroller/master/sources.json',!0);
-  xmlhttp.onreadystatechange=function(){if(xmlhttp.readyState==4){if(xmlhttp.status==200){var obj=JSON.parse(xmlhttp.responseText);
-  obj.sources.forEach(t)}}};xmlhttp.send();function t(it){if(it!=null){if(s==it.id){se=' selected'}else{se=''}tt+='<option'+se+'>'+it.id+'</option>';
-  document.getElementById('newssource').innerHTML=tt}}</script>
+  xmlhttp.onreadystatechange=function(){
+    if (xmlhttp.readyState == 4) {
+      if (xmlhttp.status == 200) {
+        var obj = JSON.parse(xmlhttp.responseText);
+        obj.sources.forEach(t)
+      }
+    }};xmlhttp.send();function t(it){
+    if (it != null) {
+      if (s == it.id) {
+        se = ' selected'
+      } else {
+        se =''
+      }
+      tt += '<option' + se + '>' + it.id + '</option>';
+      document.getElementById('newssource').innerHTML = tt
+    }}</script>
   <button class='w3-button w3-block w3-grey w3-section w3-padding' type='submit'>Save</button></form>
 )=====";
 
@@ -243,7 +263,9 @@ static const char OCTO_FORM[] PROGMEM = R"=====(
   <label>OctoPrint User (only needed if you have haproxy or basic auth turned on)</label><input class='w3-input w3-border w3-margin-bottom' type='text' name='octoUser' value='%OCTOUSER%' maxlength='30'>
   <label>OctoPrint Password </label><input class='w3-input w3-border w3-margin-bottom' type='password' name='octoPass' value='%OCTOPASS%'>
   <button class='w3-button w3-block w3-green w3-section w3-padding' type='submit'>Save</button></form>
-  <script>function isNumberKey(e){var h=e.which?e.which:event.keyCode;return!(h>31&&(h<48||h>57))}</script>
+  <script>function isNumberKey(e){
+    var h = e.which ? e.which : event.keyCode;
+    return !(h > 31 && (h < 48 || h > 57))}</script>
 )=====";
 
 const int TIMEOUT = 500; // 500 = 1/2 second
