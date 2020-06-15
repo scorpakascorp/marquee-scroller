@@ -898,9 +898,9 @@ void sendHeader() {
   }
   server.sendContent(FPSTR(WEB_ACTIONS2));
   if (displayOn) {
-    server.sendContent("<i class='fas fa-eye-slash'></i> Turn Display OFF");
+    server.sendContent("<i class='fas fa-eye-slash'></i> Turn Display OFF</a>");
   } else {
-    server.sendContent("<i class='fas fa-eye'></i> Turn Display ON");
+    server.sendContent("<i class='fas fa-eye'></i> Turn Display ON</a>");
   }
   server.sendContent(FPSTR(WEB_ACTION3));
 

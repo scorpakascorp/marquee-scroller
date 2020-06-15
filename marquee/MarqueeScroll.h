@@ -129,7 +129,7 @@ static const char WEB_ACTIONS2[] PROGMEM = R"=====(
   <a class='w3-bar-item w3-button' href='/configurebitcoin'><i class='fab fa-bitcoin'></i> Bitcoin</a>
   <a class='w3-bar-item w3-button' href='/configurepihole'><i class='fas fa-network-wired'></i> Pi-hole</a>
   <a class='w3-bar-item w3-button' href='/pull'><i class='fas fa-cloud-download-alt'></i> Refresh Data</a>
-  < class='w3-bar-item w3-button' href='/display'>
+  <a class='w3-bar-item w3-button' href='/display'>
 )=====";
 
 static const char WEB_ACTION3[] PROGMEM = R"=====(
