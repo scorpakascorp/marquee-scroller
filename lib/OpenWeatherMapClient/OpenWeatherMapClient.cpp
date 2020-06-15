@@ -25,8 +25,7 @@ SOFTWARE.
 
 #include "math.h"
 
-OpenWeatherMapClient::OpenWeatherMapClient(String ApiKey, int CityIDs[],
-                                           int cityCount, boolean isMetric) {
+OpenWeatherMapClient::OpenWeatherMapClient(String ApiKey, int CityIDs[], int cityCount, boolean isMetric) {
   updateCityIdList(CityIDs, cityCount);
   myApiKey = ApiKey;
   setMetric(isMetric);
@@ -38,25 +37,21 @@ void OpenWeatherMapClient::updateWeatherApiKey(String ApiKey) {
 
 void OpenWeatherMapClient::updateWeather() {
   WiFiClient weatherClient;
-  String apiGetData = "GET /data/2.5/group?id=" + myCityIDs +
-                      "&units=" + units + "&cnt=1&APPID=" + myApiKey +
-                      " HTTP/1.1";
+  String apiGetData = "GET /data/2.5/group?id=" + myCityIDs + "&units=" + units + "&cnt=1&APPID=" + myApiKey + " HTTP/1.1";
 
   Serial.println("*OWMC: Getting Weather Data");
   Serial.println("*OWMC: request: " + apiGetData);
   weathers[0].cached = false;
   weathers[0].error = "";
-  if (weatherClient.connect(
-          servername, 80)) {  // starts client connection, checks for connection
+  if (weatherClient.connect(servername, 80)) {  // starts client connection, checks for connection
     weatherClient.println(apiGetData);
-    weatherClient.println("Host: " + String(servername));
-    weatherClient.println("User-Agent: ArduinoWiFi/1.1");
-    weatherClient.println("Connection: close");
+    weatherClient.println("*OWMC: Host: " + String(servername));
+    weatherClient.println("*OWMC: User-Agent: ArduinoWiFi/1.1");
+    weatherClient.println("*OWMC: Connection: close");
     weatherClient.println();
   } else {
-    Serial.println(
-        "*OWMC: Connection for weather data failed");  // error message if no
-                                                       // client connect
+    Serial.println("*OWMC: Connection for weather data failed");  // error message if no
+                                                                  // client connect
     Serial.println();
     weathers[0].error = "Connection for weather data failed";
     return;
@@ -99,8 +94,7 @@ void OpenWeatherMapClient::updateWeather() {
   weatherClient.stop();  // stop client
 
   if (doc.size() <= 1) {
-    Serial.println("*OWMC: Error Does not look like we got the data.  Size: " +
-                   String(doc.size()));
+    Serial.println("*OWMC: Error Does not look like we got the data.  Size: " + String(doc.size()));
     weathers[0].cached = true;
     weathers[0].error = (const char*)doc["message"];
     Serial.println("*OWMC: Error: " + weathers[0].error);
@@ -112,21 +106,18 @@ void OpenWeatherMapClient::updateWeather() {
     weathers[inx].lat = String((float)doc["list"][inx]["coord"]["lat"]);
     weathers[inx].lon = String((float)doc["list"][inx]["coord"]["lon"]);
     weathers[inx].dt = String((long)doc["list"][inx]["dt"]);
-    weathers[inx].city = (const char*)doc["list"][inx]["name"];
+    weathers[inx].name = (const char*)doc["list"][inx]["name"];
     weathers[inx].country = (const char*)doc["list"][inx]["sys"]["country"];
     weathers[inx].timeZone = String((int)doc["list"][inx]["sys"]["timezone"]);
     weathers[inx].temp = String((int)doc["list"][inx]["main"]["temp"]);
-    weathers[inx].feels_like =
-        String((float)doc["list"][inx]["main"]["feels_like"]);
+    weathers[inx].feels_like = String((float)doc["list"][inx]["main"]["feels_like"]);
     weathers[inx].humidity = String((int)doc["list"][inx]["main"]["humidity"]);
     weathers[inx].pressure = String((int)doc["list"][inx]["main"]["pressure"]);
     weathers[inx].high = String((int)doc["list"][inx]["main"]["temp_max"]);
     weathers[inx].low = String((int)doc["list"][inx]["main"]["temp_min"]);
-    weathers[inx].condition =
-        (const char*)doc["list"][inx]["weather"][0]["main"];
+    weathers[inx].condition = (const char*)doc["list"][inx]["weather"][0]["main"];
     weathers[inx].weatherId = String((int)doc["list"][inx]["weather"][0]["id"]);
-    weathers[inx].description =
-        (const char*)doc["list"][inx]["weather"][0]["description"];
+    weathers[inx].description = (const char*)doc["list"][inx]["weather"][0]["description"];
     weathers[inx].icon = (const char*)doc["list"][inx]["weather"][0]["icon"];
     weathers[inx].wind = String((int)doc["list"][inx]["wind"]["speed"]);
     weathers[inx].direction = String((int)doc["list"][inx]["wind"]["deg"]);
@@ -146,7 +137,7 @@ void OpenWeatherMapClient::updateWeather() {
     Serial.println("*OWMC: lat: " + weathers[inx].lat);
     Serial.println("*OWMC: lon: " + weathers[inx].lon);
     Serial.println("*OWMC: dt: " + weathers[inx].dt);
-    Serial.println("*OWMC: city: " + weathers[inx].city);
+    Serial.println("*OWMC: city: " + weathers[inx].name);
     Serial.println("*OWMC: country: " + weathers[inx].country);
     Serial.println("*OWMC: temp: " + weathers[inx].temp);
     Serial.println("*OWMC: feels_like: " + weathers[inx].feels_like);
@@ -181,11 +172,7 @@ void OpenWeatherMapClient::updateCityIdList(int CityIDs[], int cityCount) {
 }
 
 void OpenWeatherMapClient::setMetric(boolean isMetric) {
-  if (isMetric) {
-    units = "metric";
-  } else {
-    units = "imperial";
-  }
+  units = (isMetric) ? "metric" : "imperial";
 }
 
 String OpenWeatherMapClient::getLat(int index) {
@@ -201,7 +188,7 @@ String OpenWeatherMapClient::getDt(int index) {
 }
 
 String OpenWeatherMapClient::getCity(int index) {
-  return weathers[index].city;
+  return weathers[index].name;
 }
 
 String OpenWeatherMapClient::getCountry(int index) {
@@ -269,6 +256,7 @@ String OpenWeatherMapClient::getDescription(int index) {
 }
 
 String OpenWeatherMapClient::getPressure(int index) {
+  // return weathers[index].pressure / 1.333;
   return weathers[index].pressure;
 }
 

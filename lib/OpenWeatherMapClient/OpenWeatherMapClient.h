@@ -38,7 +38,7 @@ class OpenWeatherMapClient {
     String lat;
     String lon;
     String dt;
-    String city;
+    String name;
     String country;
     String temp;
     String feels_like;
