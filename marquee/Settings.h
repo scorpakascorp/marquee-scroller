@@ -40,7 +40,7 @@ SOFTWARE.
 //******************************
 // Start Settings
 //******************************
-#define VERSION "2.17"
+#define VERSION "2.18"
 
 #define HOSTNAME "CLOCK-"
 #define CONFIG "/conf.txt"
@@ -51,8 +51,8 @@ SOFTWARE.
 // CLK -> D5 (SCK)
 // CS  -> D6
 // DIN -> D7 (MOSI)
-const int pinCS = D6;  // Attach CS to this pin, DIN to MOSI and CLK to SCK (cf
-                       // http://arduino.cc/en/Reference/SPI )
+const int pinCS = D6;                      // Attach CS to this pin, DIN to MOSI and CLK to SCK (cf
+                                           // http://arduino.cc/en/Reference/SPI )
 const int numberOfHorizontalDisplays = 8;  // default 4 for standard
                                            // 4 x 1 display Max size of 16
 const int numberOfVerticalDisplays = 1;    // default 1 for a single row height
@@ -73,22 +73,22 @@ String TIMEDB_API_KEY = "";  // Your API Key from
 // Default City Location (use http://openweathermap.org/find to find city ID)
 int CityIDs[] = {709930};  // Only USE ONE for weather marquee
 String USER_MESSAGE = "";
-boolean IS_METRIC = true;  // false = Imperial and true = Metric
-boolean IS_24HOUR = true;  // 23:00 millitary 24 hour clock
-boolean IS_PM = false;     // Show PM indicator on Clock when in AM/PM mode
+boolean IS_METRIC = true;                    // false = Imperial and true = Metric
+boolean IS_24HOUR = true;                    // 23:00 millitary 24 hour clock
+boolean IS_PM = false;                       // Show PM indicator on Clock when in AM/PM mode
 boolean WEB_INTERFACE_AUTH_ENABLED = false;  // Use Basic Authorization for
                                              // Configuration security
                                              // on Web Interface
-String WEB_INTERFACE_USER = "admin";     // User account for the Web Interface
-String WEB_INTERFACE_PASS = "password";  // Password for the Web Interface
-int minutesBetweenDataRefresh = 15;      // Time in minutes between
-                                         // data refresh (default 15 minutes)
-int minutesBetweenScrolling = 1;  // Time in minutes between scrolling data
-                                  // (default 1 minutes and max is 10)
-int SCROLLING_SPEED = 25;  // In milliseconds -- Configurable by the web UI
-                           // (slow = 35, normal = 25, fast = 15, very fast = 5)
-boolean IS_DOTS_BLINKING = true;  // when true the : character in the time will
-                                  // flash on and off as a seconds indicator
+String WEB_INTERFACE_USER = "admin";         // User account for the Web Interface
+String WEB_INTERFACE_PASS = "password";      // Password for the Web Interface
+int minutesBetweenDataRefresh = 15;          // Time in minutes between
+                                             // data refresh (default 15 minutes)
+int minutesBetweenScrolling = 1;             // Time in minutes between scrolling data
+                                             // (default 1 minutes and max is 10)
+int SCROLLING_SPEED = 25;                    // In milliseconds -- Configurable by the web UI
+                                             // (slow = 35, normal = 25, fast = 15, very fast = 5)
+boolean IS_DOTS_BLINKING = true;             // when true the : character in the time will
+                                             // flash on and off as a seconds indicator
 
 boolean NEWS_ENABLED = true;
 String NEWS_API_KEY = "";    // Get your News API Key from https://newsapi.org
