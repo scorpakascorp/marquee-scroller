@@ -113,28 +113,9 @@ String TIME_TO_DISPLAY_OFF = "23:00";  // 24 Hour Format HH:MM
                                        // Leave blank for always on.
                                        // Both must be set to work.
 
-// OctoPrint Monitoring -- Monitor your 3D printer OctoPrint Server
-boolean OCTOPRINT_ENABLED = false;
-boolean OCTOPRINT_PROGRESS = true;
-String OCTOPRINT_API_KEY = "";  // ApiKey from your User Account on OctoPrint
-String OCTOPRINT_SERVER = "";   // IP or Address of your
-                                // OctoPrint Server (DO NOT include http://)
-int OCTOPRINT_PORT = 80;        // the port you are running your
-                                // OctoPrint server on (usually 80);
-String OCTOPRINT_USER = "";     // only used if you have haproxy or basic
-                                // athentintication turned on (not default)
-String OCTOPRINT_PASS = "";     // only used with haproxy or basic auth (only
-                                // needed if you must authenticate)
-
 // Bitcoin Client - NONE or empty is off
 String BC_CODE = "NONE";  // Change to USD, GBD, EUR, or NONE -- this can be
                           // managed in the Web Interface
-
-// Pi-hole Client -- monitor basic stats from your Pi-hole server (see
-// http://pi-hole.net)
-boolean PIHOLE_ENABLED = false;  // Set true to display your Pi-hole details
-String PIHOLE_SERVER = "";       // IP or Address only (DO NOT include http://)
-int PIHOLE_PORT = 80;            // Port of your Pi-hole address (default 80)
 
 boolean ENABLE_OTA = true;  // this will allow you to load firmware to the
                             // device over WiFi (see OTA for ESP8266)

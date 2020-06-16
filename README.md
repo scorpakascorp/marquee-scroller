@@ -5,9 +5,7 @@
 * Local Weather and conditions (refreshed every 10 - 30 minutes)
 * News Headlines from all the major sources
 * Configured through Web Interface
-* Display 3D print progress from your OctoPrint Server
 * Option to display Bitcoin current value
-* Option to display Pi-hole status and graph (each pixel accross is 10 minutes)
 * Basic Authorization around Configuration web interface
 * Support for OTA (loading firmware over WiFi)
 * Update firmware through web interface
@@ -71,7 +69,6 @@ Starting with version 2.0 editing the **Settings.h** file is optional.  All API 
 * Open Weather Map free API key: http://openweathermap.org/  -- this is used to get weather data and the latitude and longitude for the current time zone. Weather API key is required for correct time.
 * TimeZoneDB free registration for API key: https://timezonedb.com/register -- this is used for setting the time and getting the correct time zone as well as managing time changes due to Day Light Savings time by regions.  This key is set and managed only through the web interface and added in version 2.10 of Marquee Scroller. TimeZoneDB key is required for correct time display.
 * News API key (free): https://newsapi.org/ -- Optional if you want to get current news headlines.
-* Your OctoPrint API Key -- optional if you use the OctoPrint status.
 * Version 2.0 supports Chained 4x1 LED displays -- configure in the Settings.h file.  
 
 NOTE: The settings in the Settings.h are the default settings for the first loading. After loading you will manage changes to the settings via the Web Interface. If you want to change settings again in the settings.h, you will need to erase the file system on the Wemos or use the “Reset Settings” option in the Web Interface.  
