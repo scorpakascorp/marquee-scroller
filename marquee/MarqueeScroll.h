@@ -21,6 +21,7 @@
 #include "OpenWeatherMapClient.h"
 #include "Settings.h"
 #include "TimeDB.h"
+#include "NBUStatClient.h"
 
 boolean athentication();
 void centerPrint(String msg, boolean extraStuff = false);
@@ -95,6 +96,9 @@ OpenWeatherMapClient weatherClient(WEATHER_API_KEY, CityIDs, 1, IS_METRIC);
 
 // Bitcoin Client
 BitcoinApiClient bitcoinClient;
+
+// NBUStat Client
+NBUStatClient NBUClient;
 
 ESP8266WebServer server(WEBSERVER_PORT);
 ESP8266HTTPUpdateServer serverUpdater;

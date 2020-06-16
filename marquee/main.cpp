@@ -707,8 +707,8 @@ void getUpdatedData()  // client function to send/receive GET request data.
   }
 
   if (displayOn) {
-    bitcoinClient.updateBitcoinData(
-        BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
+    bitcoinClient.updateBitcoinData(BC_CODE);
+    NBUClient.updateNBUStatData("EUR");
   }
 
   Serial.println("Firmware Version: " + String(VERSION));
@@ -748,7 +748,7 @@ void sendHeader() {
   server.sendContent(FPSTR(WEB_TOP));
   server.sendContent(FPSTR(WEB_ACTIONS));
   String html = "";
-  
+
   if (numberOfHorizontalDisplays >= 8) {
     html +=
         "<a class='w3-bar-item w3-button' href='/configurewideclock'>"
@@ -804,23 +804,9 @@ void displayWeatherData() {
   String temperature = weatherClient.getTemp(0);
   String feels_like = weatherClient.getFeelsLike(0);
 
-  // if ((temperature.indexOf(".") != -1) && (temperature.length() >=
-  // (temperature.indexOf(".") + 2))) {
-  //   temperature.remove(temperature.indexOf(".") + 2);
-  // }
-
-  Serial.println("debug-temperature: " + temperature);  // debug
-  Serial.println("debug-feels_like: " + feels_like);    // debug
-
   String time = TimeDBclient.getDayName() + ", " + TimeDBclient.getMonthName() +
                 " " + day() + ", " + hourFormat12() + ":" +
                 TimeDBclient.zeroPad(minute()) + " " + TimeDBclient.getAmPm();
-
-  Serial.println(weatherClient.getCity(0));
-  Serial.println(weatherClient.getCondition(0));
-  Serial.println(weatherClient.getDescription(0));
-  Serial.println(temperature);
-  Serial.println(time);
 
   if (TIMEDB_API_KEY == "") {
     html += "<p>Please <a href='/configure'>Configure TimeZone</a> API</p>";
@@ -869,31 +855,29 @@ void displayWeatherData() {
   html = "";                         // fresh start
 
   if (BC_CODE != "NONE" && BC_CODE != "") {
-    html =
+    html +=
         "<div class='w3-cell-row'>Bitcoin value: " + bitcoinClient.getRate() +
         " " + bitcoinClient.getCode() + "</div><br><hr>";
-    server.sendContent(String(html));
-    html = "";
   }
 
+  html +=
+      "<div class='w3-cell-row'>USD rate: " + NBUClient.getRate() +
+      " " + NBUClient.getCode() + "</div><br><hr>";
+
   if (NEWS_ENABLED) {
-    html = "<div class='w3-cell-row' style='width:100%'><h2>News (" +
-           NEWS_SOURCE + ")</h2></div>";
+    html += "<div class='w3-cell-row' style='width:100%'><h2>News (" +
+            NEWS_SOURCE + ")</h2></div>";
     if (newsClient.getTitle(0) == "") {
       html += "<p>Please <a href='/configurenews'>Configure News</a> API</p>";
-      server.sendContent(html);
-      html = "";
     } else {
       for (int inx = 0; inx < 10; inx++) {
-        html = "<div class='w3-cell-row'><a href='" + newsClient.getUrl(inx) +
-               "' target='_BLANK'>" + newsClient.getTitle(inx) + "</a></div>";
+        html += "<div class='w3-cell-row'><a href='" + newsClient.getUrl(inx) +
+                "' target='_BLANK'>" + newsClient.getTitle(inx) + "</a></div>";
         html += newsClient.getDescription(inx) + "<br/><br/>";
-        server.sendContent(html);
-        html = "";
       }
     }
   }
-
+  server.sendContent(String(html));
   sendFooter();
   server.sendContent("");
   server.client().stop();
