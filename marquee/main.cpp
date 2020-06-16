@@ -37,8 +37,7 @@ void setup() {
 
   readConfigJson();
 
-  Serial.println("*setup(): Number of LED Displays: " +
-                 String(numberOfHorizontalDisplays));
+  Serial.println("*setup(): Number of LED Displays: " + String(numberOfHorizontalDisplays));
   // initialize dispaly
   matrix.setIntensity(0);  // Use a value between 0 and 15 for brightness
   // matrix.setFont(&TomThumb);
@@ -90,8 +89,7 @@ void setup() {
 
   String hostname(HOSTNAME);
   hostname += String(ESP.getChipId(), HEX);
-  if (!wifiManager.autoConnect(
-          (const char *)hostname.c_str())) {  // new addition
+  if (!wifiManager.autoConnect((const char *)hostname.c_str())) {  // new addition
     delay(3000);
     WiFi.disconnect(true);
     ESP.reset();
@@ -107,8 +105,7 @@ void setup() {
     ArduinoOTA.onStart([]() { Serial.println("*setup() OTA: Start"); });
     ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("*setup() OTA: Progress: %u%%\r",
-                    (progress / (total / 100)));
+      Serial.printf("*setup() OTA: Progress: %u%%\r", (progress / (total / 100)));
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("*setup() OTA: Error[%u]: ", error);
@@ -150,17 +147,14 @@ void setup() {
     server.on("/configurepihole", handlePiholeConfigure);
     server.on("/display", handleDisplay);
     server.onNotFound(redirectHome);
-    serverUpdater.setup(&server, "/update", WEB_INTERFACE_USER,
-                        WEB_INTERFACE_PASS);
+    serverUpdater.setup(&server, "/update", WEB_INTERFACE_USER, WEB_INTERFACE_PASS);
     // Start the server
     server.begin();
     Serial.println("*setup(): Server started");
     // Print the IP address
-    String webAddress = "http://" + WiFi.localIP().toString() + ":" +
-                        String(WEBSERVER_PORT) + "/";
+    String webAddress = "http://" + WiFi.localIP().toString() + ":" + String(WEBSERVER_PORT) + "/";
     Serial.println("*setup(): Use this URL : " + webAddress);
-    scrollMessage(" v" + String(VERSION) +
-                  "  IP: " + WiFi.localIP().toString() + "  ");
+    scrollMessage(" v" + String(VERSION) + "  IP: " + WiFi.localIP().toString() + "  ");
   } else {
     Serial.println("*setup(): Web Interface is Disabled");
     scrollMessage("Web Interface is Disabled");
@@ -191,9 +185,7 @@ void loop() {
     }
     matrix.fillScreen(LOW);  // show black
     if (OCTOPRINT_ENABLED) {
-      if (displayOn &&
-          ((printerClient.isOperational() || printerClient.isPrinting()) ||
-           printerCount == 0)) {
+      if (displayOn && ((printerClient.isOperational() || printerClient.isPrinting()) || printerCount == 0)) {
         // This should only get called if the printer is actually running or if
         // it has been 2 minutes since last check
         printerClient.getPrinterJobResults();
@@ -234,8 +226,7 @@ void loop() {
 
       // show high/low temperature
       if (WEATHER_HIGHLOW) {
-        msg += "Hi:" + weatherClient.getHigh(0) + getTempSymbol() +
-               " / Lo:" + weatherClient.getLow(0) + " " + getTempSymbol();
+        msg += "Hi:" + weatherClient.getHigh(0) + getTempSymbol() + " / Lo:" + weatherClient.getLow(0) + " " + getTempSymbol();
         msg += scrollSpacer;
       }
 
@@ -246,8 +237,7 @@ void loop() {
         msg += "Humid: " + weatherClient.getHumidityRounded(0) + "%  ";
       }
       if (WEATHER_WIND) {
-        msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " +
-               weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
+        msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " + weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
         msg += scrollSpacer;
       }
       // line to show barometric pressure
@@ -275,8 +265,7 @@ void loop() {
         msg += scrollSpacer;
       }
       if (BC_CODE != "NONE" && BC_CODE != "") {
-        msg += "Bitcoin: " + bitcoinClient.getRate() + " " +
-               bitcoinClient.getCode();
+        msg += "Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode();
         msg += scrollSpacer;
         ;
       }
@@ -284,8 +273,7 @@ void loop() {
         piholeClient.getPiHoleData(PIHOLE_SERVER, PIHOLE_PORT);
         piholeClient.getGraphData(PIHOLE_SERVER, PIHOLE_PORT);
         if (piholeClient.getPiHoleStatus() != "") {
-          msg += "Pi-hole (" + piholeClient.getPiHoleStatus() +
-                 "): " + piholeClient.getAdsPercentageToday() + "%";
+          msg += "Pi-hole (" + piholeClient.getPiHoleStatus() + "): " + piholeClient.getAdsPercentageToday() + "%";
           msg += scrollSpacer;
         }
       }
@@ -328,11 +316,9 @@ void loop() {
 
 String hourMinutes(boolean isRefresh) {
   if (IS_24HOUR) {
-    return hour() + secondsIndicator(isRefresh) +
-           TimeDBclient.zeroPad(minute());
+    return hour() + secondsIndicator(isRefresh) + TimeDBclient.zeroPad(minute());
   } else {
-    return hourFormat12() + secondsIndicator(isRefresh) +
-           TimeDBclient.zeroPad(minute());
+    return hourFormat12() + secondsIndicator(isRefresh) + TimeDBclient.zeroPad(minute());
   }
 }
 
@@ -346,8 +332,7 @@ String secondsIndicator(boolean isRefresh) {
 
 boolean athentication() {
   if (WEB_INTERFACE_AUTH_ENABLED) {
-    return server.authenticate(WEB_INTERFACE_USER.c_str(),
-                               WEB_INTERFACE_PASS.c_str());
+    return server.authenticate(WEB_INTERFACE_USER.c_str(), WEB_INTERFACE_PASS.c_str());
   }
   return true;  // Authentication not required
 }
@@ -363,8 +348,7 @@ void handleSaveBitcoin() {
   }
   BC_CODE = server.arg("bitcoincurrency");
   writeConfigJson();
-  bitcoinClient.updateBitcoinData(
-      BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
+  bitcoinClient.updateBitcoinData(BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   redirectHome();
 }
 
@@ -576,11 +560,15 @@ void handleNewsConfigure() {
   sendHeader();
 
   String form = FPSTR(NEWS_FORM1);
-  String NEWS_ENABLED = "";
-  if (NEWS_ENABLED) {
-    NEWS_ENABLED = "checked='checked'";
-  }
-  form.replace("%NEWS_ENABLED%", NEWS_ENABLED);
+
+  // String NEWS_ENABLED = "";
+  // if (NEWS_ENABLED) {
+  //   NEWS_ENABLED = "checked='checked'";
+  // }
+
+  String strNewsEnabled = NEWS_ENABLED ? "checked='checked'" : "";
+
+  form.replace("%NEWS_ENABLED%", strNewsEnabled);
   form.replace("%NEWS_API_KEY%", NEWS_API_KEY);
   form.replace("%NEWS_SOURCE%", NEWS_SOURCE);
   server.sendContent(form);  // Send news form
@@ -844,10 +832,9 @@ void getUpdatedData()  // client function to send/receive GET request data.
   matrix.drawPixel(0, 4, HIGH);
   matrix.drawPixel(0, 3, HIGH);
   matrix.drawPixel(0, 2, HIGH);
-  Serial.println("*GetUpdatedData(): Matrix Width:" + matrix.width());
+  //Serial.println("*GetUpdatedData(): Matrix Width:" + matrix.width());
   matrix.write();
-  TimeDBclient.updateConfig(TIMEDB_API_KEY, weatherClient.getLat(0),
-                            weatherClient.getLon(0));
+  TimeDBclient.updateConfig(TIMEDB_API_KEY, weatherClient.getLat(0), weatherClient.getLon(0));
   time_t currentTime = TimeDBclient.getTime();
   if (currentTime > 5000 || firstEpoch == 0) {
     setTime(currentTime);
@@ -874,7 +861,7 @@ void getUpdatedData()  // client function to send/receive GET request data.
         BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   }
 
-  Serial.println("*GetUpdatedData(): Version: " + String(VERSION));
+  Serial.println("Firmware Version: " + String(VERSION));
   Serial.println();
   digitalWrite(externalLight, HIGH);
 }
@@ -910,12 +897,9 @@ void redirectHome() {
 void sendHeader() {
   String html = "<!DOCTYPE HTML>";
   html += "<html><head><title>Marquee Scroller</title>";
-  html +=
-      "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />";
-  html +=
-      "<meta name='viewport' content='width=device-width, initial-scale=1'>";
-  html +=
-      "<link rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css'>";
+  html += "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />";
+  html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+  html += "<link rel='stylesheet' href='https://www.w3schools.com/w3css/4/w3.css'>";
   html +=
       "<link rel='stylesheet' "
       "href='https://www.w3schools.com/lib/w3-theme-blue-grey.css'>";

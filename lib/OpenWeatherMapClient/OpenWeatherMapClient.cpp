@@ -45,9 +45,9 @@ void OpenWeatherMapClient::updateWeather() {
   weathers[0].error = "";
   if (weatherClient.connect(servername, 80)) {  // starts client connection, checks for connection
     weatherClient.println(apiGetData);
-    weatherClient.println("*OWMC: Host: " + String(servername));
-    weatherClient.println("*OWMC: User-Agent: ArduinoWiFi/1.1");
-    weatherClient.println("*OWMC: Connection: close");
+    weatherClient.println("Host: " + String(servername));
+    weatherClient.println("User-Agent: ArduinoWiFi/1.1");
+    weatherClient.println("Connection: close");
     weatherClient.println();
   } else {
     Serial.println("*OWMC: Connection for weather data failed");  // error message if no

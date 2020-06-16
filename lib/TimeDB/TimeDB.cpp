@@ -61,9 +61,8 @@ time_t TimeDB::getTime() {
   Serial.println("*TDB: Waiting for data");
 
   boolean record = false;
-  while (client.connected() ||
-         client.available()) {  // connected or data available
-    char c = client.read();     // gets byte from ethernet buffer
+  while (client.connected() || client.available()) {  // connected or data available
+    char c = client.read();                           // gets byte from ethernet buffer
     if (String(c) == "{") {
       record = true;
     }
