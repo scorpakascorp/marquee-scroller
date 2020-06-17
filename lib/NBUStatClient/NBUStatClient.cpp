@@ -37,66 +37,84 @@ void NBUStatClient::updateNBUStatData(String currencyCode) {
   WiFiClientSecure client;
   HTTPClient http;
 
-  String apiGetData = "https://" + String(servername) + "/NBUStatService/v1/statdirectory/exchangenew?json&valcode="+ currencyCode;
+  String apiGetData = "https://" + String(servername) + "/NBUStatService/v1/statdirectory/exchangenew?json&valcode=" + currencyCode;
 
   Serial.println("Getting NBUStat Data");
   Serial.println(apiGetData);
   client.setInsecure();
   http.begin(client, apiGetData);
-  int httpCode = http.GET();
+  while (client.connected() || client.available()) {
+    if (client.available()) {
+      String line = client.readStringUntil('\n');
+      Serial.println(line);
+    }
+  }
+  // int httpCode = http.GET();
 
   String result = "";
 
-  if (httpCode > 0) {  // checks for connection
-    Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-    if (httpCode == HTTP_CODE_OK) {
-      // get length of document (is -1 when Server sends no Content-Length
-      // header)
-      int len = http.getSize();
-      // create buffer for read
-      char buff[128] = {0};
-      // get tcp stream
-      WiFiClient* stream = http.getStreamPtr();
-      // read all data from server
-      Serial.println("Start reading...");
-      while (http.connected() && (len > 0 || len == -1)) {
-        // get available data size
-        size_t size = stream->available();
-        if (size) {
-          // read up to 128 byte
-          int c = stream->readBytes(
-              buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-          for (int i = 0; i < c; i++) {
-            result += buff[i];
-          }
+  // Allocate the JSON document
+  // Use arduinojson.org/v6/assistant to compute the capacity.
+  const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(5) + 60;
+  DynamicJsonDocument doc(capacity);
 
-          if (len > 0)
-            len -= c;
-        }
-        delay(1);
-      }
-    }
-    http.end();
-  } else {
-    Serial.println("connection for NBUStat data failed: " +
-                   String(apiGetData));  // error message if no client connect
-    Serial.println();
-    return;
-  }
-  // Clean dirty results
-  result.remove(0, result.indexOf("["));
-  result.remove(result.lastIndexOf("]") + 1);
-
-  char jsonArray[result.length() + 1];
-  result.toCharArray(jsonArray, sizeof(jsonArray));
-  // jsonArray[result.length() + 1] = '\0';
-  DynamicJsonDocument doc(1024);
-  DeserializationError error = deserializeJson(doc, jsonArray);
+  // Parse JSON object
+  DeserializationError error = deserializeJson(doc, client);
   if (error) {
-    Serial.print(F("NBUStatClient: JsonDeserealization error "));
+    Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.c_str());
     return;
   }
+  // if (httpCode > 0) {  // checks for connection
+  //   Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+  //   if (httpCode == HTTP_CODE_OK) {
+  //     // get length of document (is -1 when Server sends no Content-Length
+  //     // header)
+  //     int len = http.getSize();
+  //     // create buffer for read
+  //     char buff[128] = {0};
+  //     // get tcp stream
+  //     WiFiClient* stream = http.getStreamPtr();
+  //     // read all data from server
+  //     Serial.println("Start reading...");
+  //     while (http.connected() && (len > 0 || len == -1)) {
+  //       // get available data size
+  //       size_t size = stream->available();
+  //       if (size) {
+  //         // read up to 128 byte
+  //         int c = stream->readBytes(
+  //             buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+  //         for (int i = 0; i < c; i++) {
+  //           result += buff[i];
+  //         }
+
+  //         if (len > 0)
+  //           len -= c;
+  //       }
+  //       delay(1);
+  //     }
+  //   }
+  //   http.end();
+  // } else {
+  //   Serial.println("connection for NBUStat data failed: " +
+  //                  String(apiGetData));  // error message if no client connect
+  //   Serial.println();
+  //   return;
+  // }
+  // // Clean dirty results
+  // result.remove(0, result.indexOf("["));
+  // result.remove(result.lastIndexOf("]") + 1);
+
+  // char jsonArray[result.length() + 1];
+  // result.toCharArray(jsonArray, sizeof(jsonArray));
+  // // jsonArray[result.length() + 1] = '\0';
+  // DynamicJsonDocument doc(1024);
+  // DeserializationError error = deserializeJson(doc, jsonArray);
+  // if (error) {
+  //   Serial.print(F("NBUStatClient: JsonDeserealization error "));
+  //   Serial.println(error.c_str());
+  //   return;
+  // }
 
   serializeJsonPretty(doc, Serial);
   Serial.println();

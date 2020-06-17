@@ -117,6 +117,8 @@ String TIME_TO_DISPLAY_OFF = "23:00";  // 24 Hour Format HH:MM
 String BC_CODE = "NONE";  // Change to USD, GBD, EUR, or NONE -- this can be
                           // managed in the Web Interface
 
+String NBU_CODE = "NONE";
+
 boolean ENABLE_OTA = true;  // this will allow you to load firmware to the
                             // device over WiFi (see OTA for ESP8266)
 String OTA_Password = "";   // Set an OTA password here -- leave blank if you

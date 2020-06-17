@@ -246,6 +246,11 @@ void loop() {
           newsIndex = 0;
         }
       }
+      if (NBU_CODE != "NONE" && NBU_CODE != "") {
+        msg += "NBU: " + NBUClient.getRate() + " " + NBUClient.getCode();
+        msg += scrollSpacer;
+        ;
+      }
       if (BC_CODE != "NONE" && BC_CODE != "") {
         msg += "Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode();
         msg += scrollSpacer;
@@ -317,10 +322,11 @@ void handleSaveBitcoin() {
   if (!athentication()) {
     return server.requestAuthentication();
   }
-  BC_CODE = server.arg("bitcoincurrency");
+  BC_CODE = server.arg("bitcoinCurrency");
+  NBU_CODE = server.arg("NBUCurrency");
   writeConfigJson();
   bitcoinClient.updateBitcoinData(BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
-  redirectHome();
+  NBUClient.updateNBUStatData(NBU_CODE);
 }
 
 void handleSaveWideClock() {
@@ -427,6 +433,9 @@ void handleBitcoinConfigure() {
   String bitcoinOptions = FPSTR(CURRENCY_OPTIONS);
   bitcoinOptions.replace(BC_CODE + "'", BC_CODE + "' selected");
   form.replace("%BITCOINOPTIONS%", bitcoinOptions);
+  String NBUOptions = FPSTR(NBU_OPTIONS);
+  NBUOptions.replace(BC_CODE + "'", BC_CODE + "' selected");
+  form.replace("%NBUOPTIONS%", NBUOptions);
   server.sendContent(form);  // Send another Chunk of form
 
   sendFooter();
@@ -708,7 +717,7 @@ void getUpdatedData()  // client function to send/receive GET request data.
 
   if (displayOn) {
     bitcoinClient.updateBitcoinData(BC_CODE);
-    NBUClient.updateNBUStatData("EUR");
+    NBUClient.updateNBUStatData(NBU_CODE);
   }
 
   Serial.println("Firmware Version: " + String(VERSION));
@@ -859,10 +868,10 @@ void displayWeatherData() {
         "<div class='w3-cell-row'>Bitcoin value: " + bitcoinClient.getRate() +
         " " + bitcoinClient.getCode() + "</div><br><hr>";
   }
-
-  html +=
-      "<div class='w3-cell-row'>USD rate: " + NBUClient.getRate() +
-      " " + NBUClient.getCode() + "</div><br><hr>";
+  if (NBU_CODE != "NONE" && NBU_CODE != "") {
+    html +=
+        "<div class='w3-cell-row'>" + NBUClient.getCode() + " rate: " + NBUClient.getRate() + " UAH</div><br><hr>";
+  }
 
   if (NEWS_ENABLED) {
     html += "<div class='w3-cell-row' style='width:100%'><h2>News (" +
@@ -1045,6 +1054,7 @@ bool writeConfigJson() {
   doc["WEB_INTERFACE"]["PASS"] = WEB_INTERFACE_PASS;
 
   doc["BC_CODE"] = BC_CODE;
+  doc["NBU_CODE"] = NBU_CODE;
 
   doc["WEATHER"]["API_KEY"] = WEATHER_API_KEY;
   doc["WEATHER"]["CITY_ID"] = CityIDs[0];
@@ -1117,6 +1127,7 @@ bool readConfigJson() {
   WEB_INTERFACE_PASS = (const char *)doc["WEB_INTERFACE"]["PASS"];
 
   BC_CODE = (const char *)doc["BC_CODE"];
+  NBU_CODE = (const char *)doc["NBU_CODE"];
 
   WEATHER_API_KEY = (const char *)doc["WEATHER"]["API_KEY"];
   CityIDs[0] = doc["WEATHER"]["CITY_ID"];

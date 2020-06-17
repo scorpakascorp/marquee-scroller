@@ -17,11 +17,11 @@
 #include <Wire.h>
 
 #include "BitcoinApiClient.h"
+#include "NBUStatClient.h"
 #include "NewsApiClient.h"
 #include "OpenWeatherMapClient.h"
 #include "Settings.h"
 #include "TimeDB.h"
-#include "NBUStatClient.h"
 
 boolean athentication();
 void centerPrint(String msg, boolean extraStuff = false);
@@ -184,7 +184,8 @@ static const char CHANGE_FORM3[] PROGMEM = R"=====(
 
 static const char BITCOIN_FORM[] PROGMEM = R"=====(
   <form class="w3-container" action="/savebitcoin" method="get"><h2>Bitcoin Configuration:</h2>
-  <p>Select Bitcoin Currency <select class="w3-option w3-padding" name="bitcoincurrency">%BITCOINOPTIONS%</select></p>
+  <p>Select Bitcoin Currency <select class="w3-option w3-padding" name="bitcoinCurrency">%BITCOINOPTIONS%</select></p>
+  <p>Select NBU Currency <select class="w3-option w3-padding" name="NBUCurrency">%NBUOPTIONS%</select></p>
   <button class="w3-button w3-block w3-grey w3-section w3-padding" type="submit">Save</button></form>
 )=====";
 
@@ -198,6 +199,12 @@ static const char CURRENCY_OPTIONS[] PROGMEM = R"=====(
     <option value="EUR">Euro</option>
     <option value="GBP">British Pound Sterling</option>
     <option value="XAU">Gold (troy ounce)</option>
+)=====";
+
+static const char NBU_OPTIONS[] PROGMEM = R"=====(
+    <option value="NONE">NONE</option>
+    <option value="USD">United States Dollar</option>
+    <option value="EUR">Euro</option>
 )=====";
 
 static const char WIDECLOCK_FORM[] PROGMEM = R"=====(
