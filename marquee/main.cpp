@@ -238,6 +238,12 @@ void loop() {
         msg += scrollSpacer;
       }
 
+      if (NBU_CODE != "NONE" && NBU_CODE != "") {
+        msg += NBUClient.getCode() + ": " + NBUClient.getRate();
+        msg += scrollSpacer;
+        ;
+      }
+      
       if (NEWS_ENABLED) {
         msg += NEWS_SOURCE + ": " + newsClient.getTitle(newsIndex);
         msg += scrollSpacer;
@@ -246,17 +252,14 @@ void loop() {
           newsIndex = 0;
         }
       }
-      if (NBU_CODE != "NONE" && NBU_CODE != "") {
-        msg += "NBU: " + NBUClient.getRate() + " " + NBUClient.getCode();
-        msg += scrollSpacer;
-        ;
-      }
+
       if (BC_CODE != "NONE" && BC_CODE != "") {
         msg += "Bitcoin: " + bitcoinClient.getRate() + " " + bitcoinClient.getCode();
         msg += scrollSpacer;
         ;
       }
       scrollMessage(msg);
+      Serial.println(msg);
     }
   }
 

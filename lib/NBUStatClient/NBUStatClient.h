@@ -25,13 +25,14 @@ SOFTWARE.
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
-#include <WiFiClientSecureBearSSL.h>
+#include <WiFiClientSecure.h>
 
 class NBUStatClient {
  private:
   String myCurrency = "";
-
-  const char* servername = "bank.gov.ua";
+  const char* fingerprint = "2e 15 2b 46 a3 08 ca 16 0a 82 fd 0d dc ce cf a9 bc 31 11 17";
+  const char* host = "bank.gov.ua";
+  const int httpsPort = 443;
   typedef struct {
     String code;
     float rate;
@@ -47,5 +48,4 @@ class NBUStatClient {
   String getCode();
   String getRate();
   String getDescription();
-  float getRateFloat();
 };
