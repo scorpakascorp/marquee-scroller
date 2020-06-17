@@ -32,16 +32,14 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
     bpiData.code = "";
     bpiData.rate = "";
     bpiData.description = "";
-    bpiData.rate_float = 0;
     return;  // nothing to do here
   }
   WiFiClient client;
   HTTPClient http;
 
-  String apiGetData = "http://" + String(servername) + "/v1/bpi/currentprice/" +
-                      currencyCode + ".json";
+  String apiGetData = "http://" + String(servername) + "/v1/bpi/currentprice/" + currencyCode + ".json";
 
-  Serial.println("Getting Bitcoin Data");
+  Serial.print("\n*BC: getting Bitcoin Data: ");
   Serial.println(apiGetData);
   http.begin(client, apiGetData);
   int httpCode = http.GET();
@@ -49,17 +47,16 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
   String result = "";
 
   if (httpCode > 0) {  // checks for connection
-    Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+    Serial.printf("*BC: GET... code: %d\n", httpCode);
     if (httpCode == HTTP_CODE_OK) {
-      // get length of document (is -1 when Server sends no Content-Length
-      // header)
+      // get length of document (is -1 when Server sends no Content-Length header)
       int len = http.getSize();
       // create buffer for read
       char buff[128] = {0};
       // get tcp stream
       WiFiClient* stream = http.getStreamPtr();
       // read all data from server
-      Serial.println("Start reading...");
+      Serial.println("*BC: start reading...");
       while (http.connected() && (len > 0 || len == -1)) {
         // get available data size
         size_t size = stream->available();
@@ -79,8 +76,7 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
     }
     http.end();
   } else {
-    Serial.println("connection for BitCoin data failed: " +
-                   String(apiGetData));  // error message if no client connect
+    Serial.println("*BC: connection for BitCoin data failed: " + String(apiGetData));  // error message if no client connect
     Serial.println();
     return;
   }
@@ -94,23 +90,18 @@ void BitcoinApiClient::updateBitcoinData(String currencyCode) {
   DynamicJsonDocument doc(1024);
   DeserializationError error = deserializeJson(doc, jsonArray);
   if (error) {
-    Serial.print(F("BitCoinAppClient: JsonDeserealization error "));
+    Serial.print(F("*BC: JsonDeserealization error "));
     Serial.println(error.c_str());
     return;
   }
 
   bpiData.code = (const char*)doc["bpi"][String(currencyCode)]["code"];
   bpiData.rate = (const char*)doc["bpi"][String(currencyCode)]["rate"];
-  bpiData.description =
-      (const char*)doc["bpi"][String(currencyCode)]["description"];
-  bpiData.rate_float =
-      String((const char*)doc["bpi"][String(currencyCode)]["rate_float"])
-          .toFloat();
+  bpiData.description = (const char*)doc["bpi"][String(currencyCode)]["description"];
 
-  Serial.println("code: " + bpiData.code);
-  Serial.println("rate: " + bpiData.rate);
-  Serial.println("description: " + bpiData.description);
-  Serial.println("rate_float: " + String(bpiData.rate_float));
+  Serial.println("*BC: code: " + bpiData.code);
+  Serial.println("*BC: rate: " + bpiData.rate);
+  Serial.println("*BC: description: " + bpiData.description);
 
   Serial.println();
 }
@@ -127,8 +118,4 @@ String BitcoinApiClient::getRate() {
 
 String BitcoinApiClient::getDescription() {
   return bpiData.description;
-}
-
-float BitcoinApiClient::getRateFloat() {
-  return bpiData.rate_float;
 }

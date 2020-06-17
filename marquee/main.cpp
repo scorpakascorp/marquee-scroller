@@ -239,11 +239,11 @@ void loop() {
       }
 
       if (NBU_CODE != "NONE" && NBU_CODE != "") {
-        msg += NBUClient.getCode() + ": " + NBUClient.getRate();
+        msg += NBUClient.getCode() + ":" + NBUClient.getRate();
         msg += scrollSpacer;
         ;
       }
-      
+
       if (NEWS_ENABLED) {
         msg += NEWS_SOURCE + ": " + newsClient.getTitle(newsIndex);
         msg += scrollSpacer;
@@ -433,12 +433,15 @@ void handleBitcoinConfigure() {
   sendHeader();
 
   String form = FPSTR(BITCOIN_FORM);
+
   String bitcoinOptions = FPSTR(CURRENCY_OPTIONS);
-  bitcoinOptions.replace(BC_CODE + "'", BC_CODE + "' selected");
+  bitcoinOptions.replace(BC_CODE + "\"", BC_CODE + "\" selected");
   form.replace("%BITCOINOPTIONS%", bitcoinOptions);
+
   String NBUOptions = FPSTR(NBU_OPTIONS);
-  NBUOptions.replace(BC_CODE + "'", BC_CODE + "' selected");
+  NBUOptions.replace(NBU_CODE + "\"", NBU_CODE + "\" selected");
   form.replace("%NBUOPTIONS%", NBUOptions);
+
   server.sendContent(form);  // Send another Chunk of form
 
   sendFooter();
@@ -468,8 +471,7 @@ void handleWideClockConfigure() {
     String clockOptions =
         "<option value='1'>HH:MM Temperature</option><option "
         "value='2'>HH:MM:SS</option><option value='3'>HH:MM</option>";
-    clockOptions.replace(Wide_Clock_Style + "'",
-                         Wide_Clock_Style + "' selected");
+    clockOptions.replace(Wide_Clock_Style + "\"", Wide_Clock_Style + "\" selected");
     form.replace("%WIDECLOCKOPTIONS%", clockOptions);
     server.sendContent(form);
   }
@@ -623,7 +625,7 @@ void handleConfigure() {
       "<option value='35'>Slow</option><option "
       "value='25'>Normal</option><option value='15'>Fast</option><option "
       "value='10'>Very Fast</option>";
-  scrollOptions.replace(dSpeed + "'", dSpeed + "' selected");
+  scrollOptions.replace(dSpeed + "\"", dSpeed + "\" selected");
   form.replace("%SCROLLING_SPEED%", scrollOptions);
   String minutes = String(minutesBetweenDataRefresh);
   String options =
@@ -1078,8 +1080,8 @@ bool writeConfigJson() {
 
   serializeJsonPretty(doc, configFile);
   configFile.close();
-  serializeJsonPretty(doc, Serial);
-  Serial.println();
+  // serializeJsonPretty(doc, Serial);
+  // Serial.println();
   newsClient.updateNewsClient(NEWS_API_KEY, NEWS_SOURCE);
   weatherClient.updateWeatherApiKey(WEATHER_API_KEY);
   weatherClient.setMetric(IS_METRIC);
@@ -1101,8 +1103,8 @@ bool readConfigJson() {
   if (error)
     Serial.println(F("Failed to read JSON file"));
 
-  serializeJsonPretty(doc, Serial);
-  Serial.println();
+  // serializeJsonPretty(doc, Serial);
+  // Serial.println();
   f.close();
 
   TIMEDB_API_KEY = (const char *)doc["TIMEDB_API_KEY"];
@@ -1144,10 +1146,6 @@ bool readConfigJson() {
   WEATHER_DATE = doc["WEATHER"]["DATE"];
 
   matrix.setIntensity(LED_BRIGHTNESS);
-  // debug
-  Serial.println("NEWS_API_KEY: " + NEWS_API_KEY +
-                 " --- NEWS_SOURCE:" + NEWS_SOURCE);
-  ///
   newsClient.updateNewsClient(NEWS_API_KEY, NEWS_SOURCE);
   weatherClient.updateWeatherApiKey(WEATHER_API_KEY);
   weatherClient.setMetric(IS_METRIC);

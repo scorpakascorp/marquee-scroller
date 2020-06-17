@@ -38,7 +38,6 @@ class BitcoinApiClient {
     String code;
     String rate;
     String description;
-    float rate_float;
   } bpi;
 
   bpi bpiData;
@@ -50,5 +49,4 @@ class BitcoinApiClient {
   String getCode();
   String getRate();
   String getDescription();
-  float getRateFloat();
 };

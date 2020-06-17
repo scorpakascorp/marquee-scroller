@@ -20,10 +20,11 @@ void NBUStatClient::updateNBUStatData(String currencyCode) {
   if (http.begin(client, "https://" + String(host) + "/NBUStatService/v1/statdirectory/exchangenew?json&valcode=" + currencyCode)) {  // HTTP
     int httpCode = http.GET();
     if (httpCode > 0) {
-      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-        const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(5) + 60;
+      if (httpCode == HTTP_CODE_OK) {
+        String content = http.getString();
+        const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(5) + 260;
         DynamicJsonDocument doc(capacity);
-        DeserializationError error = deserializeJson(doc, http.getString());
+        DeserializationError error = deserializeJson(doc, content);
         if (error) {
           Serial.print(F("*NBU: deserializeJson() failed: "));
           Serial.println(error.c_str());
