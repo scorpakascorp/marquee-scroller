@@ -330,6 +330,7 @@ void handleSaveBitcoin() {
   writeConfigJson();
   bitcoinClient.updateBitcoinData(BC_CODE);  // does nothing if BitCoinCurrencyCode is "NONE" or empty
   NBUClient.updateNBUStatData(NBU_CODE);
+  redirectHome();
 }
 
 void handleSaveWideClock() {
