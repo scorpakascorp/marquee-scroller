@@ -53,14 +53,6 @@ void setup() {
   matrix.fillScreen(LOW);  // show black
   centerPrint("-*-");
 
-  // tone(BUZZER_PIN, 415, 500);
-  // delay(500 * 1.3);
-  // tone(BUZZER_PIN, 466, 500);
-  // delay(500 * 1.3);
-  // tone(BUZZER_PIN, 370, 1000);
-  // delay(1000 * 1.3);
-  // noTone(BUZZER_PIN);
-
   for (int inx = 0; inx <= 15; inx++) {
     matrix.setIntensity(inx);
     delay(60);
@@ -71,13 +63,12 @@ void setup() {
   }
   delay(100);
   matrix.setIntensity(LED_BRIGHTNESS);
-  // noTone(BUZZER_PIN);
 
   // WiFiManager
   // Local intialization. Once its business is done, there is no need to keep it
   // around
   WiFiManager wifiManager;
-
+  wifiManager.setConfigPortalTimeout(180);
   // Uncomment for testing wifi manager
   // wifiManager.resetSettings();
   wifiManager.setAPCallback(configModeCallback);
@@ -146,6 +137,7 @@ void setup() {
 
     // Serve static
     server.serveStatic(CONFIG_JSON, LittleFS, CONFIG_JSON);
+    server.serveStatic("/settings.html", LittleFS, "/settings.html");
     // Start the server
     server.begin();
     Serial.println("*setup(): Server started");
@@ -900,15 +892,7 @@ void displayWeatherData() {
 }
 
 void configModeCallback(WiFiManager *myWiFiManager) {
-  Serial.println("Entered config mode");
-  Serial.println(WiFi.softAPIP());
-  Serial.println("Wifi Manager");
-  Serial.println("Please connect to AP");
-  Serial.println(myWiFiManager->getConfigPortalSSID());
-  Serial.println("To setup Wifi Configuration");
-  scrollMessage("Please Connect to AP: " +
-                String(myWiFiManager->getConfigPortalSSID()));
-  centerPrint("wifi");
+  scrollMessage("Connect to AP: " + String(myWiFiManager->getConfigPortalSSID()));
 }
 
 void flashLED(int number, int delayTime) {
