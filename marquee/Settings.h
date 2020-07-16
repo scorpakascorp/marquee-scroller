@@ -81,9 +81,9 @@ boolean WEB_INTERFACE_AUTH_ENABLED = false;  // Use Basic Authorization for
                                              // on Web Interface
 String WEB_INTERFACE_USER = "admin";         // User account for the Web Interface
 String WEB_INTERFACE_PASS = "password";      // Password for the Web Interface
-int minutesBetweenDataRefresh = 15;          // Time in minutes between
+int PULL_DATA_INTERVAL = 15;                 // Time in minutes between
                                              // data refresh (default 15 minutes)
-int minutesBetweenScrolling = 1;             // Time in minutes between scrolling data
+int SCROLLING_INTERVAL = 1;                  // Time in minutes between scrolling data
                                              // (default 1 minutes and max is 10)
 int SCROLLING_SPEED = 25;                    // In milliseconds -- Configurable by the web UI
                                              // (slow = 35, normal = 25, fast = 15, very fast = 5)

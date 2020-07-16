@@ -73,7 +73,7 @@ int spacer = 1;          // dots between letters
 int width = 5 + spacer;  // The font width is 5 pixels + spacer
 Max72xxPanel matrix =
     Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
-String Wide_Clock_Style = "1";  // 1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
+String WIDE_CLOCK_STYLE = "1";  // 1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
 float UtcOffset;                // time zone offsets that correspond with the CityID above
                                 // (offset from GMT)
 const String scrollSpacer = " --- ";
@@ -163,12 +163,12 @@ static const char CHANGE_FORM2[] PROGMEM = R"=====(
   <p><input name="IS_PM" class="w3-check w3-margin-top" type="checkbox" %IS_PM_CHECKED%> Show PM indicator (only 12h format)</p>
   <p><input name="flashseconds" class="w3-check w3-margin-top" type="checkbox" %FLASHSECONDS%> Flash : in the time</p>
   <p><label>Marquee Message (up to 60 chars)</label><input class="w3-input w3-border w3-margin-bottom" type="text" name="marqueeMsg" value="%USER_MESSAGE%" maxlength="60"></p>
-  <p><label>Start Time </label><input name="startTime" type="time" value="%TIME_TO_DISPLAY_ON%"></p>
+  <p><label>Start Time </label><input name="TIME_TO_DISPLAY_ON" type="time" value="%TIME_TO_DISPLAY_ON%"></p>
   <p><label>End Time </label><input name="endTime" type="time" value="%TIME_TO_DISPLAY_OFF%"></p>
   <p>Display Brightness <input class="w3-border w3-margin-bottom" name="LED_BRIGHTNESS" type="number" min="0" max="15" value="%LED_BRIGHTNESS%"></p>
   <p>Display Scroll Speed <select class="w3-option w3-padding" name="SCROLLING_SPEED">%SCROLLING_SPEED%</select></p>
   <p>Minutes Between Refresh Data <select class="w3-option w3-padding" name="refresh">%OPTIONS%</select></p>
-  <p>Minutes Between Scrolling Data <input class="w3-border w3-margin-bottom" name="refreshDisplay" type="number" min="1" max="10" value="%REFRESH_DISPLAY%"></p>
+  <p>Minutes Between Scrolling Data <input class="w3-border w3-margin-bottom" name="refreshDisplay" type="number" min="1" max="10" value="%SCROLLING_INTERVAL%"></p>
 )=====";
 
 static const char CHANGE_FORM3[] PROGMEM = R"=====(
@@ -209,7 +209,7 @@ static const char NBU_OPTIONS[] PROGMEM = R"=====(
 
 static const char WIDECLOCK_FORM[] PROGMEM = R"=====(
   <form class="w3-container" action="/savewideclock" method="get"><h2>Wide Clock Configuration:</h2>
-  <p>Wide Clock Display Format <select class="w3-option w3-padding" name="wideclockformat">%WIDECLOCKOPTIONS%</select></p>
+  <p>Wide Clock Display Format <select class="w3-option w3-padding" name="WIDE_CLOCK_STYLE">%WIDECLOCKOPTIONS%</select></p>
   <button class="w3-button w3-block w3-grey w3-section w3-padding" type="submit">Save</button></form>
 )=====";
 

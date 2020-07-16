@@ -155,7 +155,7 @@ void setup() {
 
 void loop() {
   // Get some Weather Data to serve
-  if ((getMinutesFromLastRefresh() >= minutesBetweenDataRefresh) ||
+  if ((getMinutesFromLastRefresh() >= PULL_DATA_INTERVAL) ||
       lastEpoch == 0) {
     getUpdatedData();
   }
@@ -178,7 +178,7 @@ void loop() {
     displayRefreshCount--;
     // Check to see if we need to Scroll some Data
     if (displayRefreshCount <= 0) {
-      displayRefreshCount = minutesBetweenScrolling;
+      displayRefreshCount = SCROLLING_INTERVAL;
       String temperature = weatherClient.getTempRounded(0);
       String description = weatherClient.getDescription(0);
       description.toUpperCase();
@@ -258,7 +258,7 @@ void loop() {
   String currentTime = hourMinutes(false);
 
   if (numberOfHorizontalDisplays >= 8) {
-    if (Wide_Clock_Style == "1") {
+    if (WIDE_CLOCK_STYLE == "1") {
       // On Wide Display -- show the current temperature as well
       String currentTemp = weatherClient.getTempRounded(0);
       String timeSpacer = "";
@@ -266,11 +266,11 @@ void loop() {
         timeSpacer = " ";
       currentTime += timeSpacer + currentTemp + getTempSymbol();
     }
-    if (Wide_Clock_Style == "2") {
+    if (WIDE_CLOCK_STYLE == "2") {
       currentTime += secondsIndicator(false) + TimeDBclient.zeroPad(second());
       matrix.fillScreen(LOW);  // show black
     }
-    if (Wide_Clock_Style == "3") {
+    if (WIDE_CLOCK_STYLE == "3") {
       // No change this is normal clock display
     }
   }
@@ -330,7 +330,7 @@ void handleSaveWideClock() {
     return server.requestAuthentication();
   }
   if (numberOfHorizontalDisplays >= 8) {
-    Wide_Clock_Style = server.arg("wideclockformat");
+    WIDE_CLOCK_STYLE = server.arg("WIDE_CLOCK_STYLE");
     writeConfigJson();
     matrix.fillScreen(LOW);  // show black
   }
@@ -370,11 +370,11 @@ void handleSaveMain() {
   WEATHER_HIGHLOW = server.hasArg("showhighlow");
   IS_METRIC = server.hasArg("metric");
   USER_MESSAGE = decodeHtmlString(server.arg("marqueeMsg"));
-  TIME_TO_DISPLAY_ON = decodeHtmlString(server.arg("startTime"));
+  TIME_TO_DISPLAY_ON = decodeHtmlString(server.arg("TIME_TO_DISPLAY_ON"));
   TIME_TO_DISPLAY_OFF = decodeHtmlString(server.arg("endTime"));
   LED_BRIGHTNESS = server.arg("LED_BRIGHTNESS").toInt();
-  minutesBetweenDataRefresh = server.arg("refresh").toInt();
-  minutesBetweenScrolling = server.arg("refreshDisplay").toInt();
+  PULL_DATA_INTERVAL = server.arg("refresh").toInt();
+  SCROLLING_INTERVAL = server.arg("refreshDisplay").toInt();
   SCROLLING_SPEED = server.arg("SCROLLING_SPEED").toInt();
   WEB_INTERFACE_AUTH_ENABLED = server.hasArg("isBasicAuth");
   WEB_INTERFACE_USER = server.arg("userid");
@@ -464,7 +464,7 @@ void handleWideClockConfigure() {
     String clockOptions =
         "<option value='1'>HH:MM Temperature</option><option "
         "value='2'>HH:MM:SS</option><option value='3'>HH:MM</option>";
-    clockOptions.replace(Wide_Clock_Style + "\"", Wide_Clock_Style + "\" selected");
+    clockOptions.replace(WIDE_CLOCK_STYLE + "\"", WIDE_CLOCK_STYLE + "\" selected");
     form.replace("%WIDECLOCKOPTIONS%", clockOptions);
     server.sendContent(form);
   }
@@ -620,13 +620,13 @@ void handleConfigure() {
       "value='10'>Very Fast</option>";
   scrollOptions.replace(dSpeed + "\"", dSpeed + "\" selected");
   form.replace("%SCROLLING_SPEED%", scrollOptions);
-  String minutes = String(minutesBetweenDataRefresh);
+  String minutes = String(PULL_DATA_INTERVAL);
   String options =
       "<option>5</option><option>10</option><option>15</option><option>20</"
       "option><option>30</option><option>60</option>";
   options.replace(">" + minutes + "<", " selected>" + minutes + "<");
   form.replace("%OPTIONS%", options);
-  form.replace("%REFRESH_DISPLAY%", String(minutesBetweenScrolling));
+  form.replace("%SCROLLING_INTERVAL%", String(SCROLLING_INTERVAL));
 
   server.sendContent(form);  // Send another chunk of the form
 
@@ -947,7 +947,7 @@ int8_t getWifiQuality() {
 String getTimeTillUpdate() {
   String rtnValue = "";
 
-  long timeToUpdate = (((minutesBetweenDataRefresh * 60) + lastEpoch) - now());
+  long timeToUpdate = (((PULL_DATA_INTERVAL * 60) + lastEpoch) - now());
 
   int hours = numberOfHours(timeToUpdate);
   int minutes = numberOfMinutes(timeToUpdate);
@@ -979,7 +979,7 @@ int getMinutesFromLastDisplay() {
 void enableDisplay(boolean enable) {
   displayOn = enable;
   if (enable) {
-    if (getMinutesFromLastDisplay() >= minutesBetweenDataRefresh) {
+    if (getMinutesFromLastDisplay() >= PULL_DATA_INTERVAL) {
       // The display has been off longer than the minutes between refresh --
       // need to get fresh data
       lastEpoch = 0;        // this should force a data pull of the weather
@@ -1024,37 +1024,37 @@ bool writeConfigJson() {
   doc["USER_MESSAGE"] = USER_MESSAGE;
   doc["TIME_TO_DISPLAY_ON"] = TIME_TO_DISPLAY_ON;
   doc["TIME_TO_DISPLAY_OFF"] = TIME_TO_DISPLAY_OFF;
-  doc["ledIntensity"] = LED_BRIGHTNESS;
-  doc["scrollSpeed"] = SCROLLING_SPEED;
-
-  doc["NEWS"]["ENABLED"] = NEWS_ENABLED;
-  doc["NEWS"]["API_KEY"] = NEWS_API_KEY;
-  doc["NEWS"]["SOURCE"] = NEWS_SOURCE;
+  doc["LED_BRIGHTNESS"] = LED_BRIGHTNESS;
+  doc["SCROLLING_SPEED"] = SCROLLING_SPEED;
+  doc["SCROLLING_INTERVAL"] = SCROLLING_INTERVAL;
 
   doc["IS_DOTS_BLINKING"] = IS_DOTS_BLINKING;
   doc["IS_24HOUR"] = IS_24HOUR;
   doc["IS_PM"] = IS_PM;
-  doc["wideclockformat"] = Wide_Clock_Style;
-  doc["isMetric"] = IS_METRIC;
-  doc["refreshRate"] = minutesBetweenDataRefresh;
-  doc["minutesBetweenScrolling"] = minutesBetweenScrolling;
+  doc["WIDE_CLOCK_STYLE"] = WIDE_CLOCK_STYLE;
+  doc["PULL_DATA_INTERVAL"] = PULL_DATA_INTERVAL;
+
+  doc["BC_CODE"] = BC_CODE;
+  doc["NBU_CODE"] = NBU_CODE;
 
   doc["WEB_INTERFACE"]["AUTH_ENABLED"] = WEB_INTERFACE_AUTH_ENABLED;
   doc["WEB_INTERFACE"]["USER"] = WEB_INTERFACE_USER;
   doc["WEB_INTERFACE"]["PASS"] = WEB_INTERFACE_PASS;
 
-  doc["BC_CODE"] = BC_CODE;
-  doc["NBU_CODE"] = NBU_CODE;
+  doc["NEWS"]["ENABLED"] = NEWS_ENABLED;
+  doc["NEWS"]["API_KEY"] = NEWS_API_KEY;
+  doc["NEWS"]["SOURCE"] = NEWS_SOURCE;
 
   doc["WEATHER"]["API_KEY"] = WEATHER_API_KEY;
   doc["WEATHER"]["CITY_ID"] = CityIDs[0];
   doc["WEATHER"]["CITY_NAME"] = WEATHER_CITY;
+  doc["WEATHER"]["IS_METRIC"] = IS_METRIC;
   doc["WEATHER"]["CONDITION"] = WEATHER_CONDITION;
   doc["WEATHER"]["HUMIDITY"] = WEATHER_HUMIDITY;
   doc["WEATHER"]["WIND"] = WEATHER_WIND;
   doc["WEATHER"]["PRESSURE"] = WEATHER_PRESSURE;
   doc["WEATHER"]["HIGHLOW"] = WEATHER_HIGHLOW;
-  doc["WEATHER"]["FEELSLIKE"] = WEATHER_FEELSLIKE;
+  doc["WEATHER"]["FEELS_LIKE"] = WEATHER_FEELSLIKE;
   doc["WEATHER"]["DATE"] = WEATHER_DATE;
 
   File configFile = LittleFS.open(CONFIG_JSON, "w");
@@ -1097,37 +1097,37 @@ bool readConfigJson() {
   NEWS_SOURCE = (const char *)doc["NEWS_SOURCE"];
   TIME_TO_DISPLAY_ON = (const char *)doc["TIME_TO_DISPLAY_ON"];
   TIME_TO_DISPLAY_OFF = (const char *)doc["TIME_TO_DISPLAY_OFF"];
-  LED_BRIGHTNESS = doc["ledIntensity"];
-  SCROLLING_SPEED = doc["scrollSpeed"];
-
-  NEWS_ENABLED = doc["NEWS"]["ENABLED"];
-  NEWS_API_KEY = (const char *)doc["NEWS"]["API_KEY"];
-  NEWS_SOURCE = (const char *)doc["NEWS"]["SOURCE"];
+  LED_BRIGHTNESS = doc["LED_BRIGHTNESS"];
+  SCROLLING_SPEED = doc["SCROLLING_SPEED"];
+  SCROLLING_INTERVAL = doc["SCROLLING_INTERVAL"];
 
   IS_DOTS_BLINKING = doc["IS_DOTS_BLINKING"];
   IS_24HOUR = doc["IS_24HOUR"];
   IS_PM = doc["IS_PM"];
-  Wide_Clock_Style = (const char *)doc["wideclockformat"];
-  IS_METRIC = doc["isMetric"];
-  minutesBetweenDataRefresh = doc["refreshRate"];
-  minutesBetweenScrolling = doc["minutesBetweenScrolling"];
+  WIDE_CLOCK_STYLE = (const char *)doc["WIDE_CLOCK_STYLE"];
+  PULL_DATA_INTERVAL = doc["PULL_DATA_INTERVAL"];
+
+  BC_CODE = (const char *)doc["BC_CODE"];
+  NBU_CODE = (const char *)doc["NBU_CODE"];
 
   WEB_INTERFACE_AUTH_ENABLED = doc["WEB_INTERFACE"]["AUTH_ENABLED"];
   WEB_INTERFACE_USER = (const char *)doc["WEB_INTERFACE"]["USER"];
   WEB_INTERFACE_PASS = (const char *)doc["WEB_INTERFACE"]["PASS"];
 
-  BC_CODE = (const char *)doc["BC_CODE"];
-  NBU_CODE = (const char *)doc["NBU_CODE"];
+  NEWS_ENABLED = doc["NEWS"]["ENABLED"];
+  NEWS_API_KEY = (const char *)doc["NEWS"]["API_KEY"];
+  NEWS_SOURCE = (const char *)doc["NEWS"]["SOURCE"];
 
   WEATHER_API_KEY = (const char *)doc["WEATHER"]["API_KEY"];
   CityIDs[0] = doc["WEATHER"]["CITY_ID"];
   WEATHER_CITY = doc["WEATHER"]["CITY_NAME"];
+  IS_METRIC = doc["WEATHER"]["IS_METRIC"];
   WEATHER_CONDITION = doc["WEATHER"]["CONDITION"];
   WEATHER_HUMIDITY = doc["WEATHER"]["HUMIDITY"];
   WEATHER_WIND = doc["WEATHER"]["WIND"];
   WEATHER_PRESSURE = doc["WEATHER"]["PRESSURE"];
   WEATHER_HIGHLOW = doc["WEATHER"]["HIGHLOW"];
-  WEATHER_FEELSLIKE = doc["WEATHER"]["FEELSLIKE"];
+  WEATHER_FEELSLIKE = doc["WEATHER"]["FEELS_LIKE"];
   WEATHER_DATE = doc["WEATHER"]["DATE"];
 
   matrix.setIntensity(LED_BRIGHTNESS);
