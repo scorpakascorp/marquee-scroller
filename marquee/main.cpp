@@ -154,13 +154,33 @@ void setup() {
 }
 
 void loop() {
+
   // Get some Weather Data to serve
   if ((getMinutesFromLastRefresh() >= PULL_DATA_INTERVAL) ||
       lastEpoch == 0) {
     getUpdatedData();
   }
-  checkDisplay();  // this will see if we need to turn it on or off for night
-                   // mode.
+  checkDisplay();  // this will see if we need to turn it on or off for night mode.
+
+  currentTime = hourMinutes(false);
+
+  if (numberOfHorizontalDisplays >= 8) {
+    if (WIDE_CLOCK_STYLE == "1") {
+      // On Wide Display -- show the current temperature as well
+      String currentTemp = weatherClient.getTempRounded(0);
+      String timeSpacer = "";
+      if (currentTemp.length() <= 2)
+        timeSpacer = " ";
+      currentTime += timeSpacer + currentTemp + getTempSymbol();
+    }
+    if (WIDE_CLOCK_STYLE == "2") {
+      currentTime += secondsIndicator(false) + TimeDBclient.zeroPad(second());
+      matrix.fillScreen(LOW);  // show black
+    }
+    if (WIDE_CLOCK_STYLE == "3") {
+      // No change this is normal clock display
+    }
+  }  
 
   if (lastMinute != TimeDBclient.zeroPad(minute())) {
     lastMinute = TimeDBclient.zeroPad(minute());
@@ -183,6 +203,7 @@ void loop() {
       String description = weatherClient.getDescription(0);
       description.toUpperCase();
       String msg;
+      // msg += currentTime;
       msg += scrollSpacer;
 
       if (WEATHER_DATE) {
@@ -194,8 +215,12 @@ void loop() {
         msg += weatherClient.getCity(0);
         msg += scrollSpacer;
       }
-      msg += "Temp: " + temperature + getTempSymbol();
-      msg += scrollSpacer;
+
+      // Do not show actual temerature if it is already on the main screen
+      if (numberOfHorizontalDisplays < 8 || WIDE_CLOCK_STYLE != "1") {
+        msg += "Temp: " + temperature + getTempSymbol();
+        msg += scrollSpacer;
+      }
 
       if (WEATHER_FEELSLIKE) {
         String feels_like = weatherClient.getFeelsLikeRounded(0);
@@ -210,10 +235,12 @@ void loop() {
       }
 
       if (WEATHER_CONDITION) {
-        msg += description + ". ";
+        msg += description;
+        msg += scrollSpacer;
       }
       if (WEATHER_HUMIDITY) {
-        msg += "Humid: " + weatherClient.getHumidityRounded(0) + "%  ";
+        msg += "Humid: " + weatherClient.getHumidityRounded(0) + "%";
+        msg += scrollSpacer;
       }
       if (WEATHER_WIND) {
         msg += "Wind: " + weatherClient.getDirectionText(0) + " @ " + weatherClient.getWindRounded(0) + " " + getSpeedSymbol();
@@ -221,7 +248,7 @@ void loop() {
       }
       // line to show barometric pressure
       if (WEATHER_PRESSURE) {
-        msg += "Press: " + weatherClient.getPressure(0) + getPressureSymbol();
+        msg += "Press: " + weatherClient.getPressureRounded(0) + " " + getPressureSymbol();
         msg += scrollSpacer;
       }
 
@@ -250,30 +277,15 @@ void loop() {
         msg += scrollSpacer;
         ;
       }
+
+      // msg += currentTime;
+
       scrollMessage(msg);
       Serial.println(msg);
     }
   }
 
-  String currentTime = hourMinutes(false);
 
-  if (numberOfHorizontalDisplays >= 8) {
-    if (WIDE_CLOCK_STYLE == "1") {
-      // On Wide Display -- show the current temperature as well
-      String currentTemp = weatherClient.getTempRounded(0);
-      String timeSpacer = "";
-      if (currentTemp.length() <= 2)
-        timeSpacer = " ";
-      currentTime += timeSpacer + currentTemp + getTempSymbol();
-    }
-    if (WIDE_CLOCK_STYLE == "2") {
-      currentTime += secondsIndicator(false) + TimeDBclient.zeroPad(second());
-      matrix.fillScreen(LOW);  // show black
-    }
-    if (WIDE_CLOCK_STYLE == "3") {
-      // No change this is normal clock display
-    }
-  }
   matrix.fillScreen(LOW);
   centerPrint(currentTime, true);
 
@@ -917,17 +929,17 @@ String getTempSymbolWeb() {
 }
 
 String getSpeedSymbol() {
-  String rtnValue = "m/h";
+  String rtnValue = "mph";
   if (IS_METRIC) {
-    rtnValue = "km/h";
+    rtnValue = "m/s";
   }
   return rtnValue;
 }
 
 String getPressureSymbol() {
-  String rtnValue = "";
+  String rtnValue = "hPa";
   if (IS_METRIC) {
-    rtnValue = "mb";
+    rtnValue = "mmHg";
   }
   return rtnValue;
 }
@@ -1000,18 +1012,10 @@ void checkDisplay() {
   if (TIME_TO_DISPLAY_ON == "" || TIME_TO_DISPLAY_OFF == "") {
     return;  // nothing to do
   }
-  String currentTime =
-      TimeDBclient.zeroPad(hour()) + ":" + TimeDBclient.zeroPad(minute());
-
   if (currentTime == TIME_TO_DISPLAY_ON && !displayOn) {
-    Serial.println("Time to turn display on: " + currentTime);
-    flashLED(1, 500);
     enableDisplay(true);
   }
-
   if (currentTime == TIME_TO_DISPLAY_OFF && displayOn) {
-    Serial.println("Time to turn display off: " + currentTime);
-    flashLED(2, 500);
     enableDisplay(false);
   }
 }

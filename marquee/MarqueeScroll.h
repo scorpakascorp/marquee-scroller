@@ -68,15 +68,15 @@ int8_t getWifiQuality();
 // LED Settings
 const int offset = 1;
 int refresh = 0;
+String currentTime = "";
 String message = "hello";
 int spacer = 1;          // dots between letters
 int width = 5 + spacer;  // The font width is 5 pixels + spacer
-Max72xxPanel matrix =
-    Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
+Max72xxPanel matrix = Max72xxPanel(pinCS, numberOfHorizontalDisplays, numberOfVerticalDisplays);
 String WIDE_CLOCK_STYLE = "1";  // 1="hh:mm Temp", 2="hh:mm:ss", 3="hh:mm"
 float UtcOffset;                // time zone offsets that correspond with the CityID above
                                 // (offset from GMT)
-const String scrollSpacer = " --- ";
+const String scrollSpacer = " | ";
 
 // Time
 TimeDB TimeDBclient("");

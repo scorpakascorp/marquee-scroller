@@ -123,15 +123,16 @@ void OpenWeatherMapClient::updateWeather() {
     weathers[inx].direction = String((int)doc["list"][inx]["wind"]["deg"]);
 
     if (units == "metric") {
-      // convert to kph from m/s
-      float f = (weathers[inx].wind.toFloat() * 3.6);
+      float f = (weathers[inx].wind.toFloat());
       weathers[inx].wind = String(f);
     }
 
     if (units != "metric") {
-      float p = (weathers[inx].pressure.toFloat() *
-                 0.0295301);  // convert millibars to inches
+      float p = (weathers[inx].pressure.toFloat() * 0.0295301);  // convert millibars to inches
       weathers[inx].pressure = String(p);
+    } else {
+      float p = (weathers[inx].pressure.toFloat() * 0.750062); // mbar to mm of hg
+      weathers[inx].pressure = String(p);      
     }
 
     Serial.println("*OWMC: lat: " + weathers[inx].lat);
@@ -258,6 +259,10 @@ String OpenWeatherMapClient::getDescription(int index) {
 String OpenWeatherMapClient::getPressure(int index) {
   // return weathers[index].pressure / 1.333;
   return weathers[index].pressure;
+}
+
+String OpenWeatherMapClient::getPressureRounded(int index) {
+  return roundValue(getPressure(index));
 }
 
 String OpenWeatherMapClient::getHigh(int index) {
