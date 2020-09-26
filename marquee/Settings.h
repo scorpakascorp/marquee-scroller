@@ -43,7 +43,7 @@ SOFTWARE.
 #define VERSION "2.18"
 
 #define HOSTNAME "CLOCK-"
-#define CONFIG "/conf.txt"
+//#define CONFIG "/conf.txt"
 #define CONFIG_JSON "/conf.json"
 #define BUZZER_PIN D2
 

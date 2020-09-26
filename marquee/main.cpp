@@ -193,7 +193,7 @@ void loop() {
     if (displayOn) {
       matrix.shutdown(false);
     }
-    matrix.fillScreen(LOW);  // show black
+    //matrix.fillScreen(LOW);  // show black
 
     displayRefreshCount--;
     // Check to see if we need to Scroll some Data
@@ -278,7 +278,7 @@ void loop() {
         ;
       }
 
-      // msg += currentTime;
+      msg += currentTime;
 
       scrollMessage(msg);
       Serial.println(msg);
@@ -403,7 +403,7 @@ void handleSystemReset() {
     return server.requestAuthentication();
   }
   Serial.println("Reset System Configuration");
-  if (LittleFS.remove(CONFIG)) {
+  if (LittleFS.remove(CONFIG_JSON)) {
     redirectHome();
     ESP.restart();
   }
